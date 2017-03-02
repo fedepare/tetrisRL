@@ -124,6 +124,9 @@ def buried(board):
 
 def minimizeBuriedHoles(board, curFig, figOrient):
 
+	# initial orientation
+	initOrient = figOrient
+
 	# variable definition
 	width  = len(board[0])
 	height = len(board)
@@ -156,6 +159,8 @@ def minimizeBuriedHoles(board, curFig, figOrient):
 
 	# create a matrix to store the translations used with each rotation
 	possibilities = np.full((4, 8), -1)
+	finalHeight   = np.full((4, 8), -1)
+	finalTrans    = np.full((4, 8), -1)
 	cntTries      = 0
 
 	# rotate the figure
@@ -176,9 +181,9 @@ def minimizeBuriedHoles(board, curFig, figOrient):
 		for t in xrange(1,numTrans+1):
 
 			# store the try
-			possibilities[rot][t-1] = cntTries
 			cntTries += 1
-
+			possibilities[rot][t-1] = cntTries
+			
 			# create a copy of the board
 			simBoard = np.asarray(board)
 			
@@ -213,6 +218,9 @@ def minimizeBuriedHoles(board, curFig, figOrient):
 								simBoard[verCnt+figLoc[1]-1][horCnt+figLoc[0]] = 14
 							verCnt += 1
 						horCnt += 1
+
+					finalHeight[rot][t-1] = figLoc[1]
+					finalTrans[rot][t-1]  = figLoc[0]
 					break
 
 				# update the location of the piece
@@ -232,13 +240,42 @@ def minimizeBuriedHoles(board, curFig, figOrient):
 			minIdx = np.append(minIdx, w)
 
 	# select a random number from the optimal set
-	print minIdx
-	action = random.choice(minIdx) # CAMBIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAARLO
+	print minIdx.ndim
+	if minIdx.ndim != 0:
+		if len(minIdx) > 1:                                           # CHANGE THIS
+			action = minIdx[random.randint(0,len(minIdx)-1)]
+	else:
+		action = int(minIdx)
 
 	# find the location and orientation that corresponds to this action
 	result = np.where( possibilities == action )
 
-	print action
-	print possibilities
-	print result[0]
-	print result[1]
+	# rotate the initial orientation
+	rot = 0
+	figOrient = initOrient
+	while rot <= result[0]:
+
+		if rot != 0:
+			figOrient = [[figOrient[x][-y-1] for x in range(len(figOrient))] for y in range(len(figOrient[0]))]
+
+		# update the number of rotations
+		rot += 1
+
+	##########################################################################
+
+	# translate the figure
+	figLoc = [int(finalTrans[int(result[0])][int(result[1])]), int(finalHeight[int(result[0])][int(result[1])])]
+
+	# create a copy of the board
+	simBoard = np.asarray(board)	
+
+	horCnt = 0
+	for l in figOrient:
+		verCnt = 0
+		for k in l:
+			if k:
+				simBoard[verCnt+figLoc[1]-1][horCnt+figLoc[0]] = 10
+			verCnt += 1
+		horCnt += 1
+
+	return simBoard

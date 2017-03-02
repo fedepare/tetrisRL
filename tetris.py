@@ -190,31 +190,24 @@ while 1:
    multipleValley, buriedHoles = features(b, b1, p, f)
 
    # high-level actions evaluation
-   minimizeBuriedHoles(f, curFig, p)
+   newboard = minimizeBuriedHoles(f, curFig, p)
 
-   action = [0]
+   # reset the panel
+   for h in xrange(0,len(f)):
+     for w in xrange(0,len(f[0])):
+       f[h][w] = newboard[h][w]
+       if f[h][w] == 10:
+         f[h][w] = b + 2
 
-   # apply the action
-   for i in xrange(0,len(action)):
-     if action[i] == -1: # move left
-      op = [p[:],lc[:]];
-      lc[0] -= 1
+   b  = -20
+   t  = 1
+   rx = 0
+   rh = 0
+   p  = []
+   it = 0
+   
 
-     elif action[i] == 1: # move right
-      op = [p[:],lc[:]];
-      lc[0] += 1
-
-     elif action[i] == 2: # rotate the block
-      op = [p[:],lc[:]];
-      p  = [[p[x][-y-1] for x in range(len(p))] for y in range(len(p[0]))]
-      nor=1
-      
-     elif action[i] == 0: # do nothing
-      pass
-
-
-
-
+   time.sleep(0.5)
 
 
 
