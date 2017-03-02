@@ -8,7 +8,8 @@ import random
 import sys
 import copy 
 import os
-from pygame.locals import *;
+from pygame.locals import *
+from RL import *
 
 pg  = pygame
 pd  = pg.display 
@@ -45,9 +46,9 @@ f=[[1]+[0 for x in range(8)]+[1] for x in range(19)]+[[1 for x in range(10)]]
 of=cdc(f)
 s=12
 brt=Rect((100,0,s,s))
-b=-1
-p=[]
-lc=[-9,0]
+b=-1      # looks like the figure index (different from f)
+p=[]      # array indicating the orientation of the figure
+lc=[-9,0] # position of the leftmost and upmost point of the figure x = [1-8]; y = [0-18];
 t=0
 bt=60
 pg.key.set_repeat(200,100)
@@ -59,6 +60,7 @@ crs.set_alpha(100)
 gv=-1
 z=pg.font.Font("c.ttf",14)
 _=0
+it  = 0 # number of iterations
 
 # music
 # pg.mixer.music.load("t.ogg")
@@ -68,18 +70,18 @@ _=0
 while 1:
 
  sk.fill((0,0,0));
- _su=z.render("Score " + str(_),1,(255,255,255));
- _rect=_su.get_rect();
- _rect.bottomright=(310,230);
+ _su=z.render("Score " + str(_),1,(255,255,255))
+ _rect=_su.get_rect()
+ _rect.bottomright=(310,230)
  sk.blit(_su,_rect)
 
  if gv>-1:
-   b=10;
+   b=10
    rh=0
    if not t%5:
     gv-=1;
-    f[9-gv]=[1]*10;
-    f[10+gv]=[1]*10;
+    f[9-gv]=[1]*10
+    f[10+gv]=[1]*10
     t=1
    if gv==0:gv=99
 
@@ -87,12 +89,12 @@ while 1:
   b+=1
 
  if b==-1:
-  b=random.randint(0,6);
+  b=random.randint(0,6)
   p=pc[b];
   lc=[5-len(p)/2,0]
 
  if not t%bt or rh:
-  op=[p[:],lc[:]];
+  op=[p[:],lc[:]]
   lc[1] +=1
 
  if b < 0:continue
@@ -120,6 +122,7 @@ while 1:
    for k in l:
     if k:
      f[r+lc[1]][c+lc[0]]=b+2
+     it = 0
     r+=1
    c+=1
   b=-20;
@@ -141,74 +144,89 @@ while 1:
      _+=10;
      bt=max(8,bt-1)
 
- if gv>-1:f=cdc(of)
+ if gv>-1:
+  f=cdc(of)
 
  c=0
-
- print "---------------------"
- print f
 
  for l in f:
    r=0
    for k in l:
     try:
-     if r>=lc[0] and c>=lc[1] and p[r-lc[0]][c-lc[1]]:k=b+2
-    except:pass
-    sk.fill([x*0.75 for x in cols[k]],brt.move(r*s,c*s));
-    sk.fill(cols[k],brt.move(r*s,c*s).inflate(-4,-4));r+=1
+     if r>=lc[0] and c>=lc[1] and p[r-lc[0]][c-lc[1]]:
+      k=b+2
+    except:
+      pass
+    sk.fill([x*0.75 for x in cols[k]],brt.move(r*s,c*s))
+    sk.fill(cols[k],brt.move(r*s,c*s).inflate(-4,-4))
+    r+=1
    c+=1
  
  # cr only has values when a row is completed
  for r in cr:
-  crs.set_alpha(r[1]);
-  sk.blit(crs,(100+s,r[0]*s));
-  cp=cr.index(r);
+  crs.set_alpha(r[1])
+  sk.blit(crs,(100+s,r[0]*s))
+  cp=cr.index(r)
   cr[cp][-1]-=5
-  if cr[cp][-1]<=0:cr.remove(cr[cp])
+  if cr[cp][-1]<=0:
+    cr.remove(cr[cp])
 
  # game over
  if gv>=0:
-  gs=z.render("GAME OVER",1,(255,255,255));
-  gr=gs.get_rect();
-  gr.center=(160,120);
+  gs=z.render("GAME OVER",1,(255,255,255))
+  gr=gs.get_rect()
+  gr.center=(160,120)
   sk.blit(gs,gr)
-  if gv==99:pd.flip();time.sleep(4);
-  print "Your score was",_;
+  if gv==99:pd.flip();time.sleep(4)
+  print "Your score was",_
   sys.exit(0)
 
- pd.flip(); # update the contents of the entire display
- t+=1;
- t2+=1;
+ ######################################################################################
+ ######################################################################################
+ 
+ if it == 1:
+
+   # state space (contours and diff in height)
+   contSubsets, diffSubsets = contours(f) 
+
+   # reward
+   reward = computeReward(contSubsets, diffSubsets)
+
+   action = [0]
+
+   # apply the action
+   for x in xrange(0,len(action)):
+     if action[x] == -1: # move left
+      op=[p[:],lc[:]];
+      lc[0]-=1
+     elif action[x] == 1: # move right
+      op=[p[:],lc[:]];
+      lc[0]+=1
+     elif action[x] == 2: # rotate the block
+      op=[p[:],lc[:]];
+      p=[[p[x][-y-1] for x in range(len(p))] for y in range(len(p[0]))];
+      nor=1
+     elif action[x] == 0: # do nothing
+      pass
+
+
+
+
+
+
+
+
+
+ ######################################################################################
+ ######################################################################################
+
+ if gv>=0:
+  continue
+
+ pd.flip() # update the contents of the entire display
+ t+=1
+ t2+=1
  time.sleep(0.01) # velocity of the game
 
- if gv>=0:continue
-
- # keys
- for e in pg.event.get():
-  if e.type==KEYDOWN:
-
-   # move left
-   if e.key==K_LEFT:
-    op=[p[:],lc[:]];
-    lc[0]-=1
-
-   # move right
-   if e.key==K_RIGHT:
-    op=[p[:],lc[:]];
-    lc[0]+=1
-
-   # move down faster
-   if e.key==K_DOWN:
-    op=[p[:],lc[:]];
-    lc[1]+=1;
-    t=1
-
-   # rotate the block
-   if e.key==K_UP and p:
-    op=[p[:],lc[:]];
-    p=[[p[x][-y-1] for x in range(len(p))] for y in range(len(p[0]))];
-    nor=1
-   
-   # set the figure
-   if e.key==K_SPACE:
-    rh=1
+ # update the number of iterations
+ it += 1 
