@@ -30,36 +30,30 @@ pg.init()
 pd.set_mode((320,240),RESIZABLE)
 sk=pd.get_surface()
 
-# f is a huge matrix:
-#     - 0: Empty space
-#     - 1: Wall
-#     - 2: Square
-#     - 3: L
-#     - 4: L Inverted
-#     - 5: Stick
-#     - 6: URU
-#     - 7: ULU
-#     - 8: Cross
+# f is the current state of the board
 f=[[1]+[0 for x in range(8)]+[1] for x in range(19)]+[[1 for x in range(10)]]
 
 # game stuff
-of=cdc(f)
-s=12
-brt=Rect((100,0,s,s))
-b=-1      # looks like the figure index (different from f)
-p=[]      # array indicating the orientation of the figure
-lc=[-9,0] # position of the leftmost and upmost point of the figure x = [1-8]; y = [0-18];
-t=0
-bt=60
+of  = cdc(f)
+s   = 12
+brt = Rect((100,0,s,s))
+b   = -1      # figure index (different from f)
+b1  = random.randint(0,6) # figure index in the next timestep(different from f)
+p   = []      # array indicating the orientation of the figure
+lc  = [-9,0]  # position of the leftmost and upmost point of the figure x = [1-8]; y = [0-18];
+t   = 0
+bt  = 60
+
 pg.key.set_repeat(200,100)
-rh=0
-cr=[]
-crs=pg.Surface((8*s,s))
+rh  = 0
+cr  = []
+crs = pg.Surface((8*s,s))
 crs.fill((255,0,0))
 crs.set_alpha(100)
-gv=-1
-z=pg.font.Font("c.ttf",14)
+gv  = -1
+z   = pg.font.Font("c.ttf",14)
 _=0
+
 it  = 0 # number of iterations
 
 # music
@@ -87,11 +81,13 @@ while 1:
 
  if b<-1:
   b+=1
-
+ 
+ # initialization of a new figure
  if b==-1:
-  b=random.randint(0,6)
-  p=pc[b];
-  lc=[5-len(p)/2,0]
+  b  = b1
+  p  = pc[b];
+  lc = [5-len(p)/2,0]
+  b1 = random.randint(0,6)
 
  if not t%bt or rh:
   op=[p[:],lc[:]]
@@ -102,6 +98,7 @@ while 1:
  rx=0;
  c=0
 
+ # collision detection
  for l in p:
   r=0
   for k in l:
@@ -110,13 +107,16 @@ while 1:
    while c+lc[0]>8:
     lc[0]-=1
    if f[r+lc[1]][c+lc[0]] and k:
-    if lc[1]==0:gv=10
+    if lc[1]==0:
+      gv=10
     rx=1
    r+=1
   c+=1
 
+ # update the board with a fallen piece
  if rx and not nor:
-  p,lc=op;c=0
+  p,lc = op
+  c=0
   for l in p:
    r=0
    for k in l:
@@ -125,11 +125,11 @@ while 1:
      it = 0
     r+=1
    c+=1
-  b=-20;
-  t=1;
-  rx=0;
-  rh=0;
-  p=[]
+  b  = -20
+  t  = 1
+  rx = 0
+  rh = 0
+  p  = []
  nor = False
 
  if rh:continue
@@ -183,30 +183,33 @@ while 1:
 
  ######################################################################################
  ######################################################################################
- 
  if it == 1:
 
-   # state space (contours and diff in height)
-   contSubsets, diffSubsets = contours(f) 
+   # feature-based state identification
+   curFig, nxtFig, boardHeight, boardLevel, singleValley, \
+   multipleValley, buriedHoles = features(b, b1, p, f)
 
-   # reward
-   reward = computeReward(contSubsets, diffSubsets)
+   # high-level actions evaluation
+   minimizeBuriedHoles(f, curFig, p)
 
    action = [0]
 
    # apply the action
-   for x in xrange(0,len(action)):
-     if action[x] == -1: # move left
-      op=[p[:],lc[:]];
-      lc[0]-=1
-     elif action[x] == 1: # move right
-      op=[p[:],lc[:]];
-      lc[0]+=1
-     elif action[x] == 2: # rotate the block
-      op=[p[:],lc[:]];
-      p=[[p[x][-y-1] for x in range(len(p))] for y in range(len(p[0]))];
+   for i in xrange(0,len(action)):
+     if action[i] == -1: # move left
+      op = [p[:],lc[:]];
+      lc[0] -= 1
+
+     elif action[i] == 1: # move right
+      op = [p[:],lc[:]];
+      lc[0] += 1
+
+     elif action[i] == 2: # rotate the block
+      op = [p[:],lc[:]];
+      p  = [[p[x][-y-1] for x in range(len(p))] for y in range(len(p[0]))]
       nor=1
-     elif action[x] == 0: # do nothing
+      
+     elif action[i] == 0: # do nothing
       pass
 
 
@@ -230,3 +233,33 @@ while 1:
 
  # update the number of iterations
  it += 1 
+
+ # keys
+ for e in pg.event.get():
+  if e.type==KEYDOWN:
+
+   # move left
+   if e.key==K_LEFT:
+    op=[p[:],lc[:]];
+    lc[0]-=1
+
+   # move right
+   if e.key==K_RIGHT:
+    op=[p[:],lc[:]];
+    lc[0]+=1
+
+   # move down faster
+   if e.key==K_DOWN:
+    op=[p[:],lc[:]];
+    lc[1]+=1;
+    t=1
+
+   # rotate the block
+   if e.key==K_UP and p:
+    op=[p[:],lc[:]];
+    p=[[p[x][-y-1] for x in range(len(p))] for y in range(len(p[0]))];
+    nor=1
+   
+   # set the figure
+   if e.key==K_SPACE:
+    rh=1
