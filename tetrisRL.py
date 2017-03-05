@@ -38,7 +38,7 @@ nCnt = 0
 rho  = 0.1
 
 muVec   = [0 for x in xrange(0, 11)]
-sigVec  = [100 for x in xrange(0, 11)]
+sigVec  = [10 for x in xrange(0, 11)]
 weights = np.zeros((n, 11))
 for x in xrange(0,n):
   for y in xrange(0,11):
