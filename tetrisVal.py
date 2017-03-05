@@ -251,7 +251,6 @@ while games < numGames:
       maxQaction = random.randint(0,1)
      
      # execute the action selected
-     actionCnt[maxQaction] += 1
      newboard = chooseAction(f, curFig, p, maxQaction+1)
 
      # reset the panel

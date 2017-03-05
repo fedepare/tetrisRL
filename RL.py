@@ -207,7 +207,7 @@ def buried(board):
 	maxCont = max(contour)
 
 	# penalize for increasing the height of the board
-	return buriedHoles + maxCont
+	return 10*buriedHoles + maxCont
 
 
 def heightBoard(board):
@@ -260,7 +260,7 @@ def maximizeLines(board):
 	maxCont = max(contour)
 
 	# penalize for increasing the height of the board
-	return -cntLines + maxCont
+	return -cntLines*10 + maxCont
 
 
 def chooseAction(board, curFig, figOrient, action):

@@ -38,7 +38,7 @@ Qcheck = np.zeros((numCombinations,2))
 
 # number of games to be playes
 games    = 0
-numGames = 100
+numGames = 1000
 score    = 0
 lines    = 0
 learning = 1
@@ -264,7 +264,7 @@ while games < numGames:
        linesRemoved, buriedHolesNew, boardHeightNew = analyzeNewBoard(newboard)
 
        # compute reward
-       reward = 100 * linesRemoved
+       reward = 100 * linesRemoved - 10 * (boardHeightNew - boardHeight)
 
        # NEW BOARD: feature-based state identification
        curFig, nxtFig, boardHeight, boardLevel, singleValley, \
@@ -281,7 +281,7 @@ while games < numGames:
            maxQnewBoard = Q[newIndex][x]
 
        # update Q matrix
-       Q[index][maxQaction] += 0.5*(reward + 0.9*maxQnewBoard - Q[index][maxQaction])
+       Q[index][maxQaction] += 0.3*(reward + 0.5*maxQnewBoard - Q[index][maxQaction])
        Qcheck[index][maxQaction] += 1
        if Qcheck[index][maxQaction] == 1:
          accum += 1
@@ -306,6 +306,7 @@ while games < numGames:
      rh = 0
      p  = []
      it = 0
+
      time.sleep(0)
 
    ######################################################################################
@@ -325,8 +326,5 @@ while games < numGames:
 # Saving the objects:
 with open('objs.pickle', 'w') as f:  # Python 3: open(..., 'wb')
     pickle.dump([Q, Qcheck], f)
-
-# plots
-print actionCnt
 
 sys.exit(0)
