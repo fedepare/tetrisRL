@@ -37,11 +37,13 @@ n    = 100
 nCnt = 0
 rho  = 0.1
 
-muVec   = [0 for x in xrange(0, 11)]
-sigVec  = [100 for x in xrange(0, 11)]
-weights = np.zeros((n, 11))
+numFt = 17
+
+muVec   = [0 for x in xrange(0, 4)]
+sigVec  = [10 for x in xrange(0, 4)]
+weights = np.zeros((n, 4))
 for x in xrange(0,n):
-  for y in xrange(0,11):
+  for y in xrange(0,4):
     weights[x][y] = np.random.normal(muVec[y], sigVec[y], 1)
 
 nScore = [0 for x in xrange(0, n)]
@@ -236,22 +238,22 @@ while games < numGames:
         nScore[index] = -1
 
       # update average and standard deviation
-      for x in xrange(0,11):
+      for x in xrange(0,4):
         accum = 0
         for y in xrange(1,len(idxBest)):
           accum += weights[y][x]
         muVec[x] = accum / len(idxBest)
 
-      for x in xrange(0,11):
+      for x in xrange(0,4):
         accum = 0
         for y in xrange(1,len(idxBest)):
           accum += (weights[y][x] - muVec[x])**2
         sigVec[x] = np.sqrt(accum / len(idxBest))
 
       # obtain a new set of weights
-      weights = np.zeros((n, 11))
+      weights = np.zeros((n, 4))
       for x in xrange(0,n):
-        for y in xrange(0,11):
+        for y in xrange(0,4):
           weights[x][y] = np.random.normal(muVec[y], sigVec[y], 1)
 
       # reset the score matrix

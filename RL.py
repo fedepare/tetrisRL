@@ -20,16 +20,22 @@ def features(board, prevLines, altitudeLast, weights, nCnt):
 	width  = len(board[0])
 	height = len(board)
 
-	# 1. pile height
+	# 1. contour
 	contour = [0 for x in range(width-2)]
 	for w in xrange(1,width-1):
 		for h in range(height-1,0,-1):
 			if board[h][w] != 1 and board[h][w] != 0:
 			   contour[w-1] = height - 1 - h
 
+	# 2. pile height
 	pileHeight = max(contour)
 
-    # 2. number of buried holes
+	# 4. difference in altitude
+	diffHeight = [0 for x in range(width-3)]
+	for w in xrange(0,len(contour)-1):
+		diffHeight[w] = contour[w+1] - contour[w]
+
+    # 5. number of buried holes
 	buriedHoles = 0
 	for w in xrange(0,len(contour)):
 		hStart = height - 1 - contour[w]
@@ -37,85 +43,38 @@ def features(board, prevLines, altitudeLast, weights, nCnt):
 			if board[h][w+1] == 0:
 				buriedHoles += 1
 
-	# 3. connected buried holes
-	connectedHoles = 0
-	for w in xrange(0,len(contour)):
-		hStart = height - 1 - contour[w]
-		for h in xrange(hStart,height-1):
-			if board[h][w+1] == 0 and board[h-1][w+1] != 0:
-				connectedHoles += 1
-
-	# 4. removed lines
-	removedLines = prevLines
-
-	# 5. altitude difference
-	altitudeDiff = pileHeight - min(contour)
-
-	# 6. maximum well depth (single width)
-	# 7. sum of all wells
-	diffHeight = [0 for x in range(width-3)]
-	for w in xrange(0,len(contour)-1):
-		diffHeight[w] = contour[w+1] - contour[w]
-
-	maxDepthWell = 0
-	cntWell      = 0
-	for w in xrange(0,len(diffHeight)-1):
-		if w == 0 and diffHeight[w] > 0:
-			maxDepthWell = diffHeight[w]
-			cntWell += 1
-		elif diffHeight[w] < 0 and diffHeight[w+1] > 0:
-			depth = min([abs(diffHeight[w]), abs(diffHeight[w+1])])
-			if depth > maxDepthWell:
-				maxDepthWell = depth
-			cntWell += 1
-		elif w+1 == len(diffHeight)-1 and diffHeight[w+1] < 0:
-			depth = abs(diffHeight[w+1])
-			if depth > maxDepthWell:
-				maxDepthWell = depth
-			cntWell += 1
-
-	# 8. weighted blocks
-	weigthedBlocks = 0
-	for w in xrange(0,len(contour)):
-		hStart = height - 1 - contour[w]
-		for h in xrange(hStart,height-1):
-			n = height - 1 - h
-			if board[h][w+1] != 0:
-				weigthedBlocks += n
-
-	# 9. landing height
-	landingHeight = height - 1 - altitudeLast
-
-	# 10. row transitions
-	rowTrans = 0
-	hStart   = height - 1 - max(contour)
-	for h in xrange(hStart,height-1):
-		for w in xrange(0,len(contour)-1):
-			if board[h][w+1] == 0 and board[h][w+2] != 0:
-				rowTrans += 1
-			elif board[h][w+1] != 0 and board[h][w+2] == 0:
-				rowTrans += 1
-
-	# 11. column transitions
-	colTrans = 0
-	for w in xrange(0,len(contour)-1):
-		hStart   = height - 1 - contour[w]
-		for h in xrange(hStart,height-1):
-			if board[h-1][w+1] == 0 and board[h][w+1] != 0:
-				colTrans += 1
-			elif board[h-1][w+1] != 0 and board[h][w+1] == 0:
-				colTrans += 1
+	if buriedHoles == 0:
+		buriedHoles = 0
+	elif buriedHoles > 0 and buriedHoles <= 5:
+		buriedHoles = 1
+	elif buriedHoles > 5 and buriedHoles <= 10:
+		buriedHoles = 2
+	else: buriedHoles = 3
 
 	# store the features in a vector
-	featVec = [pileHeight, buriedHoles, connectedHoles, removedLines, \
-			   altitudeDiff, maxDepthWell, cntWell, weigthedBlocks, landingHeight, \
-			   rowTrans, colTrans]
+	featVec = [0 for x in xrange(0,17)]
+	for x in xrange(0,len(featVec)):
+		if x < 8:
+			featVec[x] = contour[x]
+		elif x == 8:
+			featVec[x] = pileHeight
+		elif x > 8 and x < 16:
+			featVec[x] = diffHeight[x-9]
+		else:
+			featVec[x] = buriedHoles
 
 	# value of the state
 	value = 0
 	for x in xrange(0,len(featVec)):
-		value += featVec[x] * weights[nCnt][x]
-
+		if x < 8:
+			value += featVec[x] * weights[nCnt][0]
+		elif x == 8:
+			value += featVec[x] * weights[nCnt][1]
+		elif x > 8 and x < 16:
+			value += featVec[x] * weights[nCnt][2]
+		else:
+			value += featVec[x] * weights[nCnt][3]
+		
 	return value
 
 def getNewBoard(board, curFig, figOrient, diffLines, altitudeLast, weights, nCnt):
