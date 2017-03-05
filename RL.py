@@ -14,95 +14,100 @@ warnings.filterwarnings("ignore")
 ###########
 
 
-def features(figIdx, nextfigIdx, board):
+def features(board, prevLines, altitudeLast):
 
 	# variable definition
 	width  = len(board[0])
 	height = len(board)
-	
-	# 1. current figure
-	curFig = ""
 
-	if figIdx == 0:
-		curFig = "O"
-	elif figIdx == 1:
-		curFig = "J"
-	elif figIdx == 2:
-		curFig = "L"
-	elif figIdx == 3:
-		curFig = "I"
-	elif figIdx == 4:
-		curFig = "Z"
-	elif figIdx == 5:
-		curFig = "S"
-	elif figIdx == 6:
-		curFig = "T"
-
-	# 2. next figure
-	nxtFig = ""
-
-	if nextfigIdx == 0:
-		nxtFig = "O"
-	elif nextfigIdx == 1:
-		nxtFig = "J"
-	elif nextfigIdx == 2:
-		nxtFig = "L"
-	elif nextfigIdx == 3:
-		nxtFig = "I"
-	elif nextfigIdx == 4:
-		nxtFig = "Z"
-	elif nextfigIdx == 5:
-		nxtFig = "S"
-	elif nextfigIdx == 6:
-		nxtFig = "T"
-
-	# 3. board height
-	accum   = 0
+	# 1. pile height
 	contour = [0 for x in range(width-2)]
 	for w in xrange(1,width-1):
 		for h in range(height-1,0,-1):
 			if board[h][w] != 1 and board[h][w] != 0:
 			   contour[w-1] = height - 1 - h
 
-	for w in xrange(0,len(contour)):
-		accum += contour[w]
+	pileHeight = max(contour)
 
-	boardHeight = accum / (width-2)
-
-	# 4. board level
-	boardLevel = 1
-	diffHeight = [0 for x in range(width-3)]
-	for w in xrange(0,len(contour)-1):
-		diffHeight[w] = contour[w+1] - contour[w]
-		if diffHeight[w] > 3 or diffHeight[w] < -3:
-			boardLevel = 0
-
-	# 5. single and multiple (unit-width) valley
-	counter        = 0
-	singleValley   = 0
-	multipleValley = 0
-	for w in xrange(0,len(diffHeight)-1):
-		if diffHeight[w] < 0 and diffHeight[w+1] > 0:
-			singleValley = 1
-			counter += 1
-		elif w == 0 and diffHeight[w] > 0:
-			singleValley = 1
-			counter += 1
-		elif w+1 == len(diffHeight)-1 and diffHeight[w+1] < 0:
-			singleValley = 1
-			counter += 1
-
-	if counter > 1:
-		singleValley   = 0
-		multipleValley = 1
-
-	# 6. number of buried holes
+    # 2. number of buried holes
 	buriedHoles = 0
 	for w in xrange(0,len(contour)):
 		hStart = height - 1 - contour[w]
 		for h in xrange(hStart,height-1):
 			if board[h][w+1] == 0:
 				buriedHoles += 1
+
+	# 3. connected buried holes
+	connectedHoles = 0
+	for w in xrange(0,len(contour)):
+		hStart = height - 1 - contour[w]
+		for h in xrange(hStart,height-1):
+			if board[h][w+1] == 0 and board[h-1][w+1] != 0:
+				connectedHoles += 1
+
+	# 4. removed lines
+	removedLines = prevLines
+
+	# 5. altitude difference
+	altitudeDiff = pileHeight - min(contour)
+
+	# 6. maximum well depth (single width)
+	# 7. sum of all wells
+	diffHeight = [0 for x in range(width-3)]
+	for w in xrange(0,len(contour)-1):
+		diffHeight[w] = contour[w+1] - contour[w]
+
+	maxDepthWell = 0
+	cntWell      = 0
+	for w in xrange(0,len(diffHeight)-1):
+		if w == 0 and diffHeight[w] > 0:
+			maxDepthWell = diffHeight[w]
+			cntWell += 1
+		elif diffHeight[w] < 0 and diffHeight[w+1] > 0:
+			depth = min([abs(diffHeight[w]), abs(diffHeight[w+1])])
+			if depth > maxDepthWell:
+				maxDepthWell = depth
+			cntWell += 1
+		elif w+1 == len(diffHeight)-1 and diffHeight[w+1] < 0:
+			depth = abs(diffHeight[w+1])
+			if depth > maxDepthWell:
+				maxDepthWell = depth
+			cntWell += 1
+
+	# 8. weighted blocks
+	weigthedBlocks = 0
+	for w in xrange(0,len(contour)):
+		hStart = height - 1 - contour[w]
+		for h in xrange(hStart,height-1):
+			n = height - 1 - h
+			if board[h][w+1] != 0:
+				weigthedBlocks += n
+
+	# 9. landing height
+	landingHeight = height - 1 - altitudeLast
+
+	# 10. row transitions
+	rowTrans = 0
+	hStart   = height - 1 - max(contour)
+	for h in xrange(hStart,height-1):
+		for w in xrange(0,len(contour)-1):
+			if board[h][w+1] == 0 and board[h][w+2] != 0:
+				rowTrans += 1
+			elif board[h][w+1] != 0 and board[h][w+2] == 0:
+				rowTrans += 1
+
+	# 11. column transitions
+	colTrans = 0
+	for w in xrange(0,len(contour)-1):
+		hStart   = height - 1 - contour[w] + 1
+		for h in xrange(hStart,height-2):
+			if board[h][w+1] == 0 and board[h+1][w+1] != 0:
+				colTrans += 1
+			elif board[h][w+1] != 0 and board[h+1][w+1] == 0:
+				colTrans += 1
+
+
+
 
 	return curFig, nxtFig, boardHeight, boardLevel, singleValley, multipleValley, buriedHoles
 

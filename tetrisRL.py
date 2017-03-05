@@ -58,6 +58,12 @@ while games < numGames:
   t   = 0
   bt  = 60
 
+  # lines removed previous step
+  linesRemoved = 0
+
+  # altitude at which the previous piece landed
+  altitudeLast = 0
+
   pg.key.set_repeat(200,100)
   rh  = 0
   cr  = []
@@ -213,12 +219,7 @@ while games < numGames:
    if it == 1 and not cr:
 
      # feature-based state identification
-     curFig, nxtFig, boardHeight, boardLevel, singleValley, \
-     multipleValley, buriedHoles = features(b, b1, f)
-
-     # create state index
-     index = stateIndex(b, b1, boardHeight, boardLevel, \
-      singleValley, multipleValley, buriedHoles)
+     features(f, linesRemoved, altitudeLast)
 
      if learning:
 
