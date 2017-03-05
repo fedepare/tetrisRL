@@ -99,93 +99,27 @@ def features(board, prevLines, altitudeLast):
 	# 11. column transitions
 	colTrans = 0
 	for w in xrange(0,len(contour)-1):
-		hStart   = height - 1 - contour[w] + 1
-		for h in xrange(hStart,height-2):
-			if board[h][w+1] == 0 and board[h+1][w+1] != 0:
+		hStart   = height - 1 - contour[w]
+		for h in xrange(hStart,height-1):
+			if board[h-1][w+1] == 0 and board[h][w+1] != 0:
 				colTrans += 1
-			elif board[h][w+1] != 0 and board[h+1][w+1] == 0:
+			elif board[h-1][w+1] != 0 and board[h][w+1] == 0:
 				colTrans += 1
 
+	# store the features in a vector
+	featVec = [pileHeight, buriedHoles, connectedHoles, removedLines, \
+			   altitudeDiff, maxDepthWell, cntWell, weigthedBlocks, landingHeight, \
+			   rowTrans, colTrans]
 
+	# compute the weights for each of these features (CROSS-ENTROPY METHOD)
+	weigths = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
 
+	# value of the state
+	value = 0
+	for x in xrange(0,len(featVec)):
+		value += featVec[x] * weigths[x]
 
-	return curFig, nxtFig, boardHeight, boardLevel, singleValley, multipleValley, buriedHoles
-
-def analyzeNewBoard(board):
-
-	# variable definition
-	width  = len(board[0])
-	height = len(board)
-
-	# board height
-	cntLines = 0
-	flagLine = 0
-	for h in range(height-2,0,-1):
-		for w in xrange(1,width-1):
-			if board[h][w] != 0:
-				flagLine = 1
-			else:
-				flagLine = 0
-				break
-
-		if flagLine:
-			cntLines += 1
-
-	# number of buried holes
-	buriedHoles = buried(board)
-
-	# board height
-	accum   = 0
-	contour = [0 for x in range(width-2)]
-	for w in xrange(1,width-1):
-		for h in range(height-1,0,-1):
-			if board[h][w] != 1 and board[h][w] != 0:
-			   contour[w-1] = height - 1 - h
-
-	for w in xrange(0,len(contour)):
-		accum += contour[w]
-
-	boardHeight = accum / (width-2)
-
-	return cntLines, buriedHoles, boardHeight
-
-
-def stateIndex(curFig, nxtFig, boardHeight, boardLevel, singleValley, multipleValley, buriedHoles):
-
-	# pre-process buried holes
-	if buriedHoles == 0:
-		buriedHoles = 0
-	elif buriedHoles >= 1 and buriedHoles <= 5:
-		buriedHoles = 1
-	elif buriedHoles >= 6 and buriedHoles <= 10:
-		buriedHoles = 2
-	elif buried > 10:
-		buriedHoles = 3
-
-	# numbers
-	numPieces = 7
-	numBH     = 20
-	numBL     = 2
-	numSS     = 2
-	numMS     = 2
-	numH      = 4
-
-	# number of combinations
-	numCombinations = (numPieces**2)*numBH*numBL*numSS*numMS*numH
-
-	# get the index
-	combCurFig = numCombinations / numPieces
-	combNxtFig = combCurFig / numPieces
-	combBH     = combNxtFig / numBH
-	combBL     = combBH / numBL
-	combSS     = combBL / numSS
-	combMS     = combSS / numMS
-	combH      = combMS / numH
-
-	index = combCurFig*curFig + combNxtFig*nxtFig + combBH*boardHeight + combBL*boardLevel + \
-			combSS*singleValley + combMS*multipleValley + combH*buriedHoles
-
-	return index
+	return value
 
 
 def buried(board):
@@ -213,27 +147,6 @@ def buried(board):
 
 	# penalize for increasing the height of the board
 	return 10*buriedHoles + maxCont
-
-
-def heightBoard(board):
-
-	# variable definition
-	width  = len(board[0])
-	height = len(board)
-
-    # board height
-	accum   = 0
-	contour = [0 for x in range(width-2)]
-	for w in xrange(1,width-1):
-		for h in range(height-1,0,-1):
-			if board[h][w] != 1 and board[h][w] != 0:
-			   contour[w-1] = height - 1 - h
-			   
-	for w in xrange(0,len(contour)):
-		accum += contour[w]
-
-	return accum
-
 
 def maximizeLines(board):
 	
@@ -278,25 +191,25 @@ def chooseAction(board, curFig, figOrient, action):
 	height = len(board)
 
 	# each piece has a different set of rotations and translations
-	if curFig == "O":
+	if curFig == 0:
 		rotations = 0
 
-	elif curFig == "J":
+	elif curFig == 1:
 		rotations = 3
 
-	elif curFig == "L":
+	elif curFig == 2:
 		rotations = 3
 
-	elif curFig == "I":
+	elif curFig == 3:
 		rotations = 1
 
-	elif curFig == "Z":
+	elif curFig == 4:
 		rotations = 1
 
-	elif curFig == "S":
+	elif curFig == 5:
 		rotations = 1
 
-	elif curFig == "T":
+	elif curFig == 6:
 		rotations = 3
 
 	# create reward vector
@@ -432,23 +345,159 @@ def chooseAction(board, curFig, figOrient, action):
 			verCnt += 1
 		horCnt += 1
 
-	return simBoard
+	return simBoard, figLoc
 
-def plots():
 
-	# initialize figure
-	mpl.rcParams['legend.fontsize'] = 10
-	fig1 = plt.figure(1)
-	ax1 = fig1.gca()
-	ax1.set_xlabel('t [s]', fontsize=15)
-	ax1.set_ylabel('navError [ft]', fontsize=15)
+def getNewBoard(board, curFig, figOrient, diffLines, altitudeLast):
 
-	ax1.plot(tSVOex[0:-1], navErrorSVO[0:-1], label='SDFC', linewidth=1, color=colorSVO, linestyle=linestyleSVO)
-	ax1.plot(tEKFex[0:-1], navErrorEKF[0:-1], label='Default', linewidth=1, color=colorEKF, linestyle=linestyleEKF)
-	
-	ax1.grid(grid)
-	ax1.legend(loc='upper left', prop={'size':13})
-	
+	# initial orientation
+	initOrient = figOrient
 
-	# show the plots
-	plt.show()
+	# variable definition
+	width  = len(board[0])
+	height = len(board)
+
+	# each piece has a different set of rotations and translations
+	if curFig == 0:
+		rotations = 0
+
+	elif curFig == 1:
+		rotations = 3
+
+	elif curFig == 2:
+		rotations = 3
+
+	elif curFig == 3:
+		rotations = 1
+
+	elif curFig == 4:
+		rotations = 1
+
+	elif curFig == 5:
+		rotations = 1
+
+	elif curFig == 6:
+		rotations = 3
+
+	# create reward vector
+	stateValue = [-1e6 for x in range(32)]
+	rCnt       = 0
+
+	# create a matrix to store the translations used with each rotation
+	possibilities = np.full((4, 8), -1)
+	finalHeight   = np.full((4, 8), -1)
+	finalTrans    = np.full((4, 8), -1)
+	cntTries      = 0
+
+	# rotate the figure
+	rot = 0
+	while rot <= rotations:
+		
+		# current orientation
+		if rot != 0:
+			figOrient = [[figOrient[x][-y-1] for x in range(len(figOrient))] for y in range(len(figOrient[0]))]
+		
+		# width of the figure with the current orientation
+		wFig = len(figOrient)
+		
+		# number of possible translations for the current orientation
+		numTrans = width - 2 - wFig + 1
+
+		# evaluate the board with all the possible translations
+		for t in xrange(1,numTrans+1):
+
+			# store the try
+			cntTries += 1
+			possibilities[rot][t-1] = cntTries
+			
+			# create a copy of the board
+			simBoard = np.asarray(board)
+			
+			# location of the figure
+			figLoc = [t, 0]
+
+			# initialize collision flag
+			collision = 0
+
+			# board update
+			while True:
+
+				# detect collision (CHANGE SOMETHING HERE)
+				horCnt = 0
+				for l in figOrient:
+					verCnt = 0
+					for k in l:
+
+						if board[verCnt+figLoc[1]][horCnt+figLoc[0]] and k:
+							collision = 1
+
+						verCnt += 1
+					horCnt += 1
+
+				# update the simulated board with the current piece
+				if collision:
+					horCnt = 0
+					for l in figOrient:
+						verCnt = 0
+						for k in l:
+							if k:
+								simBoard[verCnt+figLoc[1]-1][horCnt+figLoc[0]] = 14
+							verCnt += 1
+						horCnt += 1
+
+					finalHeight[rot][t-1] = figLoc[1]
+					finalTrans[rot][t-1]  = figLoc[0]
+					break
+
+				# update the location of the piece
+				figLoc[1] += 1
+
+			# extract the features of the new board
+			stateValue[rCnt] = features(simBoard, diffLines, altitudeLast)
+			rCnt += 1
+
+		# update the number of rotations
+		rot += 1
+
+	# indexes with maximum value
+	maxIdx = np.array(stateValue.index(max(stateValue)))
+	for w in xrange(maxIdx+1,len(stateValue)):
+		if stateValue[w] == stateValue[np.array(stateValue.index(max(stateValue)))]:
+			maxIdx = np.append(maxIdx, w)
+
+	# select a random number from the optimal set
+	if maxIdx.ndim != 0:
+		if len(maxIdx) > 1:                               
+			configuration = maxIdx[random.randint(0,len(maxIdx)-1)]
+	else:
+		configuration = int(maxIdx)
+
+	# find the location and orientation that corresponds to this action
+	result = np.where( possibilities == configuration+1 )
+
+	# rotate the initial orientation
+	rot = 0
+	figOrient = initOrient
+	while rot <= result[0]:
+
+		if rot != 0:
+			figOrient = [[figOrient[x][-y-1] for x in range(len(figOrient))] for y in range(len(figOrient[0]))]
+
+		# update the number of rotations
+		rot += 1
+
+	# translate the figure
+	figLoc = [int(finalTrans[int(result[0])][int(result[1])]), int(finalHeight[int(result[0])][int(result[1])])]
+
+	# create a copy of the board
+	simBoard = np.asarray(board)	
+
+	# update the board
+	horCnt = 0
+	for l in figOrient:
+		verCnt = 0
+		for k in l:
+			if k:
+				simBoard[verCnt+figLoc[1]-1][horCnt+figLoc[0]] = 10
+			verCnt += 1
+		horCnt += 1

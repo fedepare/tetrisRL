@@ -59,10 +59,10 @@ while games < numGames:
   bt  = 60
 
   # lines removed previous step
-  linesRemoved = 0
+  prevLines = 0
 
   # altitude at which the previous piece landed
-  altitudeLast = 0
+  altitudeLast = 19
 
   pg.key.set_repeat(200,100)
   rh  = 0
@@ -217,25 +217,13 @@ while games < numGames:
    ######################################################################################
    ######################################################################################
    if it == 1 and not cr:
+    
+     # choose the pose of the new block
+     getNewBoard(f, b, p, lines - prevLines, altitudeLast)
 
-     # feature-based state identification
-     features(f, linesRemoved, altitudeLast)
-
-     if learning:
-
-       # high-level actions evaluation
-       #     1. minimize buried holes
-       #     2. maximize lines
-       
-       # execute the action selected
-       newboard = chooseAction(f, curFig, p, 1)
-
-     else:
-       # high-level actions evaluation
-       #     1. minimize buried holes
-       #     2. minimize column height
-       #     3. maximize lines
-       newboard = chooseAction(f, curFig, p, 3)
+     
+     # execute the action selected
+     newboard, figLoc = chooseAction(f, b, p, 1)
 
      # reset the panel
      for h in xrange(0,len(f)):
@@ -250,8 +238,10 @@ while games < numGames:
      rh = 0
      p  = []
      it = 0
+     prevLines    = lines
+     altitudeLast = figLoc[1]
 
-     time.sleep(0)
+     time.sleep(0.25)
 
    ######################################################################################
    ######################################################################################
@@ -266,9 +256,5 @@ while games < numGames:
 
    # update the number of iterations
    it += 1 
-
-# Saving the objects:
-with open('objs.pickle', 'w') as f:  # Python 3: open(..., 'wb')
-    pickle.dump([Q, Qcheck], f)
 
 sys.exit(0)
