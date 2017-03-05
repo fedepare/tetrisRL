@@ -25,17 +25,6 @@ pg.init()
 pd.set_mode((320,240),RESIZABLE)
 sk=pd.get_surface()
 
-# initialization of Q matrix
-numPieces = 7
-numBH     = 20
-numBL     = 2
-numSS     = 2
-numMS     = 2
-numH      = 4
-numCombinations = (numPieces**2)*numBH*numBL*numSS*numMS*numH
-Q = np.zeros((numCombinations,2))
-Qcheck = np.zeros((numCombinations,2))
-
 # number of games to be playes
 games    = 0
 numGames = 1000
@@ -236,55 +225,9 @@ while games < numGames:
        # high-level actions evaluation
        #     1. minimize buried holes
        #     2. maximize lines
-
-       # choose the action with highest Q value
-       maxQ       = -1e6
-       maxQaction = -1
-       equalQ     = 0
-       
-       for x in xrange(0,2):
-         if Q[index][x] > maxQ:
-           maxQ       = Q[index][x]
-           maxQaction = x
-
-         if x != 0 and Q[index][x] == maxQ:
-          equalQ = 1
-         else:
-          equalQ = 0
-
-       # in case Q is equal for all the action, choose randomly
-       if equalQ == 1:
-        maxQaction = random.randint(0,1)
        
        # execute the action selected
-       actionCnt[maxQaction] += 1
-       newboard = chooseAction(f, curFig, p, maxQaction+1)
-
-       # analyze the new board
-       linesRemoved, buriedHolesNew, boardHeightNew = analyzeNewBoard(newboard)
-
-       # compute reward
-       reward = 100 * linesRemoved - 10 * (boardHeightNew - boardHeight)
-
-       # NEW BOARD: feature-based state identification
-       curFig, nxtFig, boardHeight, boardLevel, singleValley, \
-       multipleValley, buriedHoles = features(b, b1, newboard)
-
-       # NEW BOARD: create state index
-       newIndex = stateIndex(b1, b2, boardHeight, boardLevel, \
-        singleValley, multipleValley, buriedHoles)
-
-       # NEW BOARD: choose the action with highest Q value
-       maxQnewBoard = -1e6
-       for x in xrange(0,2):
-         if Q[newIndex][x] > maxQnewBoard:
-           maxQnewBoard = Q[newIndex][x]
-
-       # update Q matrix
-       Q[index][maxQaction] += 0.3*(reward + 0.5*maxQnewBoard - Q[index][maxQaction])
-       Qcheck[index][maxQaction] += 1
-       if Qcheck[index][maxQaction] == 1:
-         accum += 1
+       newboard = chooseAction(f, curFig, p, 1)
 
      else:
        # high-level actions evaluation
