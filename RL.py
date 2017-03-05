@@ -113,8 +113,10 @@ def features(board, prevLines, altitudeLast, weights, nCnt):
 
 	# value of the state
 	value = 0
+	# for x in xrange(0,len(featVec)):
+	# 	value += featVec[x] * weights[nCnt][x]
 	for x in xrange(0,len(featVec)):
-		value += featVec[x] * weights[nCnt][x]
+		value += featVec[x] * weights[nCnt]
 
 	return value
 

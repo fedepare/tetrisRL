@@ -28,7 +28,7 @@ sk=pd.get_surface()
 
 # number of games to be playes
 games    = 0
-numGames = 1000
+numGames = 100
 lines    = 0
 accum    = 0
 
@@ -37,12 +37,17 @@ n    = 100
 nCnt = 0
 rho  = 0.1
 
-muVec   = [0 for x in xrange(0, 11)]
-sigVec  = [10 for x in xrange(0, 11)]
-weights = np.zeros((n, 11))
+# muVec   = [0 for x in xrange(0, 11)]
+# sigVec  = [100 for x in xrange(0, 11)]
+# weights = np.zeros((n, 11))
+# for x in xrange(0,n):
+#   for y in xrange(0,11):
+#     weights[x][y] = np.random.normal(muVec[y], sigVec[y], 1)
+muVec   = 0
+sigVec  = 10
+weights = np.zeros((n, 1))
 for x in xrange(0,n):
-  for y in xrange(0,11):
-    weights[x][y] = np.random.normal(muVec[y], sigVec[y], 1)
+    weights[x] = np.random.normal(muVec, sigVec, 1)
 
 nScore = [0 for x in xrange(0, n)]
 
@@ -236,23 +241,43 @@ while games < numGames:
         nScore[index] = -1
 
       # update average and standard deviation
-      for x in xrange(0,11):
-        accum = 0
-        for y in xrange(1,len(idxBest)):
-          accum += weights[y][x]
-        muVec[x] = accum / len(idxBest)
+      # for x in xrange(0,11):
+      #   accum = 0
+      #   for y in xrange(1,len(idxBest)):
+      #     accum += weights[y][x]
+      #   muVec[x] = accum / len(idxBest)
 
-      for x in xrange(0,11):
-        accum = 0
-        for y in xrange(1,len(idxBest)):
-          accum += (weights[y][x] - muVec[x])**2
-        sigVec[x] = np.sqrt(accum / len(idxBest))
+      accum = 0
+      for y in xrange(1,len(idxBest)):
+        accum += weights[y]
+      muVec = accum / len(idxBest)
+
+      # create a copy of the board
+      fede = np.asarray(sigVec)
+
+      # for x in xrange(0,11):
+      #   accum = 0
+      #   for y in xrange(1,len(idxBest)):
+      #     accum += (weights[y][x] - muVec[x])**2
+      #   sigVec[x] = np.sqrt(accum / len(idxBest))
+
+      accum = 0
+      for y in xrange(1,len(idxBest)):
+        accum += (weights[y] - muVec)**2
+      sigVec = np.sqrt(accum / len(idxBest))
+
+      fede = np.vstack((fede, sigVec))
+      print fede
 
       # obtain a new set of weights
-      weights = np.zeros((n, 11))
+      # weights = np.zeros((n, 11))
+      # for x in xrange(0,n):
+      #   for y in xrange(0,11):
+      #     weights[x][y] = np.random.normal(muVec[y], sigVec[y], 1)
+
+      weights = np.zeros((n))
       for x in xrange(0,n):
-        for y in xrange(0,11):
-          weights[x][y] = np.random.normal(muVec[y], sigVec[y], 1)
+          weights[x] = np.random.normal(muVec, sigVec, 1)
 
       # reset the score matrix
       nScore = [0 for x in xrange(0, n)]
