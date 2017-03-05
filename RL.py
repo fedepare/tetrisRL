@@ -14,7 +14,7 @@ warnings.filterwarnings("ignore")
 ###########
 
 
-def features(board, prevLines, altitudeLast):
+def features(board, prevLines, altitudeLast, weights, nCnt):
 
 	# variable definition
 	width  = len(board[0])
@@ -111,77 +111,14 @@ def features(board, prevLines, altitudeLast):
 			   altitudeDiff, maxDepthWell, cntWell, weigthedBlocks, landingHeight, \
 			   rowTrans, colTrans]
 
-	# compute the weights for each of these features (CROSS-ENTROPY METHOD)
-	weigths = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
-
 	# value of the state
 	value = 0
 	for x in xrange(0,len(featVec)):
-		value += featVec[x] * weigths[x]
+		value += featVec[x] * weights[nCnt][x]
 
 	return value
 
-
-def buried(board):
-
-	# variable definition
-	width  = len(board[0])
-	height = len(board)
-
-	# contour
-	contour = [0 for x in range(width-2)]
-	for w in xrange(1,width-1):
-		for h in range(height-1,0,-1):
-			if board[h][w] != 1 and board[h][w] != 0:
-			   contour[w-1] = height - 1 - h
-
-    # number of buried holes
-	buriedHoles = 0
-	for w in xrange(0,len(contour)):
-		hStart = height - 1 - contour[w]
-		for h in xrange(hStart,height-1):
-			if board[h][w+1] == 0:
-				buriedHoles += 1
-
-	maxCont = max(contour)
-
-	# penalize for increasing the height of the board
-	return 10*buriedHoles + maxCont
-
-def maximizeLines(board):
-	
-	# variable definition
-	width  = len(board[0])
-	height = len(board)
-
-	# board height
-	cntLines = 0
-	flagLine = 0
-	for h in range(height-2,0,-1):
-		for w in xrange(1,width-1):
-			if board[h][w] != 0:
-				flagLine = 1
-			else:
-				flagLine = 0
-				break
-
-		if flagLine:
-			cntLines += 1
-
-	# contour
-	contour = [0 for x in range(width-2)]
-	for w in xrange(1,width-1):
-		for h in range(height-1,0,-1):
-			if board[h][w] != 1 and board[h][w] != 0:
-			   contour[w-1] = height - 1 - h
-
-	maxCont = max(contour)
-
-	# penalize for increasing the height of the board
-	return -cntLines*10 + maxCont
-
-
-def chooseAction(board, curFig, figOrient, action):
+def getNewBoard(board, curFig, figOrient, diffLines, altitudeLast, weights, nCnt):
 
 	# initial orientation
 	initOrient = figOrient
@@ -213,174 +150,7 @@ def chooseAction(board, curFig, figOrient, action):
 		rotations = 3
 
 	# create reward vector
-	reward = [1e6 for x in range(32)]
-	rCnt   = 0
-
-	# create a matrix to store the translations used with each rotation
-	possibilities = np.full((4, 8), -1)
-	finalHeight   = np.full((4, 8), -1)
-	finalTrans    = np.full((4, 8), -1)
-	cntTries      = 0
-
-	# rotate the figure
-	rot = 0
-	while rot <= rotations:
-		
-		# current orientation
-		if rot != 0:
-			figOrient = [[figOrient[x][-y-1] for x in range(len(figOrient))] for y in range(len(figOrient[0]))]
-		
-		# width of the figure with the current orientation
-		wFig = len(figOrient)
-		
-		# number of possible translations for the current orientation
-		numTrans = width - 2 - wFig + 1
-
-		# evaluate the board with all the possible translations
-		for t in xrange(1,numTrans+1):
-
-			# store the try
-			cntTries += 1
-			possibilities[rot][t-1] = cntTries
-			
-			# create a copy of the board
-			simBoard = np.asarray(board)
-			
-			# location of the figure
-			figLoc = [t, 0]
-
-			# initialize collision flag
-			collision = 0
-
-			# board update
-			while True:
-
-				# detect collision (CHANGE SOMETHING HERE)
-				horCnt = 0
-				for l in figOrient:
-					verCnt = 0
-					for k in l:
-
-						if board[verCnt+figLoc[1]][horCnt+figLoc[0]] and k:
-							collision = 1
-
-						verCnt += 1
-					horCnt += 1
-
-				# update the simulated board with the current piece
-				if collision:
-					horCnt = 0
-					for l in figOrient:
-						verCnt = 0
-						for k in l:
-							if k:
-								simBoard[verCnt+figLoc[1]-1][horCnt+figLoc[0]] = 14
-							verCnt += 1
-						horCnt += 1
-
-					finalHeight[rot][t-1] = figLoc[1]
-					finalTrans[rot][t-1]  = figLoc[0]
-					break
-
-				# update the location of the piece
-				figLoc[1] += 1
-
-			# high-level action selection
-			if action == 1:
-				# count the number of buried holes
-				reward[rCnt] = buried(simBoard)
-				
-			elif action == 3:
-				# sum of column heights
-				reward[rCnt] = heightBoard(simBoard)
-
-			elif action == 2:
-				# count the number of lines that can be removed
-				reward[rCnt] = maximizeLines(simBoard)
-			
-			rCnt += 1
-
-		# update the number of rotations
-		rot += 1
-
-	# indexes with minimum (maximum) reward
-	minIdx = np.array(reward.index(min(reward)))
-	for w in xrange(minIdx+1,len(reward)):
-		if reward[w] == reward[np.array(reward.index(min(reward)))]:
-			minIdx = np.append(minIdx, w)
-
-	# select a random number from the optimal set
-	if minIdx.ndim != 0:
-		if len(minIdx) > 1:                                           # CHANGE THIS
-			configuration = minIdx[random.randint(0,len(minIdx)-1)]
-	else:
-		configuration = int(minIdx)
-
-	# find the location and orientation that corresponds to this action
-	result = np.where( possibilities == configuration+1 )
-
-	# rotate the initial orientation
-	rot = 0
-	figOrient = initOrient
-	while rot <= result[0]:
-
-		if rot != 0:
-			figOrient = [[figOrient[x][-y-1] for x in range(len(figOrient))] for y in range(len(figOrient[0]))]
-
-		# update the number of rotations
-		rot += 1
-
-	# translate the figure
-	figLoc = [int(finalTrans[int(result[0])][int(result[1])]), int(finalHeight[int(result[0])][int(result[1])])]
-
-	# create a copy of the board
-	simBoard = np.asarray(board)	
-
-	horCnt = 0
-	for l in figOrient:
-		verCnt = 0
-		for k in l:
-			if k:
-				simBoard[verCnt+figLoc[1]-1][horCnt+figLoc[0]] = 10
-			verCnt += 1
-		horCnt += 1
-
-	return simBoard, figLoc
-
-
-def getNewBoard(board, curFig, figOrient, diffLines, altitudeLast):
-
-	# initial orientation
-	initOrient = figOrient
-
-	# variable definition
-	width  = len(board[0])
-	height = len(board)
-
-	# each piece has a different set of rotations and translations
-	if curFig == 0:
-		rotations = 0
-
-	elif curFig == 1:
-		rotations = 3
-
-	elif curFig == 2:
-		rotations = 3
-
-	elif curFig == 3:
-		rotations = 1
-
-	elif curFig == 4:
-		rotations = 1
-
-	elif curFig == 5:
-		rotations = 1
-
-	elif curFig == 6:
-		rotations = 3
-
-	# create reward vector
-	stateValue = [-1e6 for x in range(32)]
+	stateValue = [-float('Inf') for x in range(32)]
 	rCnt       = 0
 
 	# create a matrix to store the translations used with each rotation
@@ -453,7 +223,7 @@ def getNewBoard(board, curFig, figOrient, diffLines, altitudeLast):
 				figLoc[1] += 1
 
 			# extract the features of the new board
-			stateValue[rCnt] = features(simBoard, diffLines, altitudeLast)
+			stateValue[rCnt] = features(simBoard, diffLines, altitudeLast, weights, nCnt)
 			rCnt += 1
 
 		# update the number of rotations
@@ -501,3 +271,5 @@ def getNewBoard(board, curFig, figOrient, diffLines, altitudeLast):
 				simBoard[verCnt+figLoc[1]-1][horCnt+figLoc[0]] = 10
 			verCnt += 1
 		horCnt += 1
+
+	return simBoard, figLoc

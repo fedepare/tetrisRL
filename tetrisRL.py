@@ -11,6 +11,7 @@ import os
 from pygame.locals import *
 from RL import *
 import pickle
+import operator
 
 pg  = pygame
 pd  = pg.display 
@@ -28,20 +29,31 @@ sk=pd.get_surface()
 # number of games to be playes
 games    = 0
 numGames = 1000
-score    = 0
 lines    = 0
-learning = 1
 accum    = 0
-actionCnt = [0, 0, 0]
 
+# initial normal distribution
+n    = 100
+nCnt = 0
+rho  = 0.1
+
+muVec   = [0 for x in xrange(0, 11)]
+sigVec  = [100 for x in xrange(0, 11)]
+weights = np.zeros((n, 11))
+for x in xrange(0,n):
+  for y in xrange(0,11):
+    weights[x][y] = np.random.normal(muVec[y], sigVec[y], 1)
+
+nScore = [0 for x in xrange(0, n)]
 
 while games < numGames:
 
   # definition of variables
-  t2   = 0
-  nor  = 0
-  pc   = [[[1,1],[1,1]],[[1,0],[1,0],[1,1]],[[0,1],[0,1],[1,1]],[[1],[1],[1],[1]],[[0,1,1],[1,1,0]],[[1,1,0],[0,1,1]],[[1,1,1],[0,1,0]]]
-  cols = [(0,0,0),(100,100,100),(10,100,225),(0,150,220),(0,220,150),(60,200,10),(180,210,5),(210,180,10),(100,200,170)]
+  lines = 0
+  t2    = 0
+  nor   = 0
+  pc    = [[[1,1],[1,1]],[[1,0],[1,0],[1,1]],[[0,1],[0,1],[1,1]],[[1],[1],[1],[1]],[[0,1,1],[1,1,0]],[[1,1,0],[0,1,1]],[[1,1,1],[0,1,0]]]
+  cols  = [(0,0,0),(100,100,100),(10,100,225),(0,150,220),(0,220,150),(60,200,10),(180,210,5),(210,180,10),(100,200,170)]
 
   # f is the current state of the board
   f=[[1]+[0 for x in range(8)]+[1] for x in range(19)]+[[1 for x in range(10)]]
@@ -57,9 +69,6 @@ while games < numGames:
   lc  = [-9,0]  # position of the leftmost and upmost point of the figure x = [1-8]; y = [0-18];
   t   = 0
   bt  = 60
-
-  # lines removed previous step
-  prevLines = 0
 
   # altitude at which the previous piece landed
   altitudeLast = 19
@@ -201,29 +210,61 @@ while games < numGames:
 
    # game over
    if gv>=0:
+    print "Game: [%s, %s] -> Lines: %s" % (games, nCnt, lines)
+
     gs=z.render("GAME OVER",1,(255,255,255))
     gr=gs.get_rect()
     gr.center=(160,120)
     sk.blit(gs,gr)
+
     if gv==99:
       pd.flip()
       time.sleep(4)
 
-    games += 1
-    score += _
-    print "Game: %s -> Score: %s, Lines: %s, States: %s" % (games, score, lines, accum)
+    # update nCnt
+    nScore[nCnt] = lines
+    nCnt += 1
+    if nCnt == n:
+      nCnt = 0
+      games += 1
+
+      # select the best configurations
+      idxBest = [0 for x in xrange(0,int(rho*n))]
+      for x in xrange(0,int(rho*n)):
+        index, value = max(enumerate(nScore), key=operator.itemgetter(1))
+        idxBest[x] = index
+        nScore[index] = -1
+
+      # update average and standard deviation
+      for x in xrange(0,11):
+        accum = 0
+        for y in xrange(1,len(idxBest)):
+          accum += weights[y][x]
+        muVec[x] = accum / len(idxBest)
+
+      for x in xrange(0,11):
+        accum = 0
+        for y in xrange(1,len(idxBest)):
+          accum += (weights[y][x] - muVec[x])**2
+        sigVec[x] = np.sqrt(accum / len(idxBest))
+
+      # obtain a new set of weights
+      weights = np.zeros((n, 11))
+      for x in xrange(0,n):
+        for y in xrange(0,11):
+          weights[x][y] = np.random.normal(muVec[y], sigVec[y], 1)
+
+      # reset the score matrix
+      nScore = [0 for x in xrange(0, n)]
+
     break
     
    ######################################################################################
    ######################################################################################
    if it == 1 and not cr:
-    
-     # choose the pose of the new block
-     getNewBoard(f, b, p, lines - prevLines, altitudeLast)
 
-     
-     # execute the action selected
-     newboard, figLoc = chooseAction(f, b, p, 1)
+     # choose the pose of the new block
+     newboard, figLoc = getNewBoard(f, b, p, lines, altitudeLast, weights, nCnt)
 
      # reset the panel
      for h in xrange(0,len(f)):
@@ -241,7 +282,7 @@ while games < numGames:
      prevLines    = lines
      altitudeLast = figLoc[1]
 
-     time.sleep(0.25)
+     time.sleep(0)
 
    ######################################################################################
    ######################################################################################
