@@ -4,12 +4,17 @@
 
 import numpy as np
 import random
+import matplotlib.pyplot as plt
+import matplotlib as mpl
+import warnings
+warnings.filterwarnings("ignore")
 
 ###########
 # FUNCTIONS
 ###########
 
-def features(figIdx, nextfigIdx, figOrient, board):
+
+def features(figIdx, nextfigIdx, board):
 
 	# variable definition
 	width  = len(board[0])
@@ -58,8 +63,10 @@ def features(figIdx, nextfigIdx, figOrient, board):
 		for h in range(height-1,0,-1):
 			if board[h][w] != 1 and board[h][w] != 0:
 			   contour[w-1] = height - 1 - h
-			   accum       += contour[w-1]
-	
+
+	for w in xrange(0,len(contour)):
+		accum += contour[w]
+
 	boardHeight = accum / (width-2)
 
 	# 4. board level
@@ -99,6 +106,83 @@ def features(figIdx, nextfigIdx, figOrient, board):
 
 	return curFig, nxtFig, boardHeight, boardLevel, singleValley, multipleValley, buriedHoles
 
+def analyzeNewBoard(board):
+
+	# variable definition
+	width  = len(board[0])
+	height = len(board)
+
+	# board height
+	cntLines = 0
+	flagLine = 0
+	for h in range(height-2,0,-1):
+		for w in xrange(1,width-1):
+			if board[h][w] != 0:
+				flagLine = 1
+			else:
+				flagLine = 0
+				break
+
+		if flagLine:
+			cntLines += 1
+
+	# number of buried holes
+	buriedHoles = buried(board)
+
+	# board height
+	accum   = 0
+	contour = [0 for x in range(width-2)]
+	for w in xrange(1,width-1):
+		for h in range(height-1,0,-1):
+			if board[h][w] != 1 and board[h][w] != 0:
+			   contour[w-1] = height - 1 - h
+
+	for w in xrange(0,len(contour)):
+		accum += contour[w]
+
+	boardHeight = accum / (width-2)
+
+	return cntLines, buriedHoles, boardHeight
+
+
+def stateIndex(curFig, nxtFig, boardHeight, boardLevel, singleValley, multipleValley, buriedHoles):
+
+	# pre-process buried holes
+	if buriedHoles == 0:
+		buriedHoles = 0
+	elif buriedHoles >= 1 and buriedHoles <= 5:
+		buriedHoles = 1
+	elif buriedHoles >= 6 and buriedHoles <= 10:
+		buriedHoles = 2
+	elif buried > 10:
+		buriedHoles = 3
+
+	# numbers
+	numPieces = 7
+	numBH     = 20
+	numBL     = 2
+	numSS     = 2
+	numMS     = 2
+	numH      = 4
+
+	# number of combinations
+	numCombinations = (numPieces**2)*numBH*numBL*numSS*numMS*numH
+
+	# get the index
+	combCurFig = numCombinations / numPieces
+	combNxtFig = combCurFig / numPieces
+	combBH     = combNxtFig / numBH
+	combBL     = combBH / numBL
+	combSS     = combBL / numSS
+	combMS     = combSS / numMS
+	combH      = combMS / numH
+
+	index = combCurFig*curFig + combNxtFig*nxtFig + combBH*boardHeight + combBL*boardLevel + \
+			combSS*singleValley + combMS*multipleValley + combH*buriedHoles
+
+	return index
+
+
 def buried(board):
 
 	# variable definition
@@ -120,9 +204,66 @@ def buried(board):
 			if board[h][w+1] == 0:
 				buriedHoles += 1
 
-	return buriedHoles
+	maxCont = max(contour)
 
-def minimizeBuriedHoles(board, curFig, figOrient):
+	# penalize for increasing the height of the board
+	return buriedHoles + maxCont
+
+
+def heightBoard(board):
+
+	# variable definition
+	width  = len(board[0])
+	height = len(board)
+
+    # board height
+	accum   = 0
+	contour = [0 for x in range(width-2)]
+	for w in xrange(1,width-1):
+		for h in range(height-1,0,-1):
+			if board[h][w] != 1 and board[h][w] != 0:
+			   contour[w-1] = height - 1 - h
+			   
+	for w in xrange(0,len(contour)):
+		accum += contour[w]
+
+	return accum
+
+
+def maximizeLines(board):
+	
+	# variable definition
+	width  = len(board[0])
+	height = len(board)
+
+	# board height
+	cntLines = 0
+	flagLine = 0
+	for h in range(height-2,0,-1):
+		for w in xrange(1,width-1):
+			if board[h][w] != 0:
+				flagLine = 1
+			else:
+				flagLine = 0
+				break
+
+		if flagLine:
+			cntLines += 1
+
+	# contour
+	contour = [0 for x in range(width-2)]
+	for w in xrange(1,width-1):
+		for h in range(height-1,0,-1):
+			if board[h][w] != 1 and board[h][w] != 0:
+			   contour[w-1] = height - 1 - h
+
+	maxCont = max(contour)
+
+	# penalize for increasing the height of the board
+	return -cntLines + maxCont
+
+
+def chooseAction(board, curFig, figOrient, action):
 
 	# initial orientation
 	initOrient = figOrient
@@ -226,8 +367,19 @@ def minimizeBuriedHoles(board, curFig, figOrient):
 				# update the location of the piece
 				figLoc[1] += 1
 
-			# count the number of buried holes
-			reward[rCnt] = buried(simBoard)
+			# high-level action selection
+			if action == 1:
+				# count the number of buried holes
+				reward[rCnt] = buried(simBoard)
+				
+			elif action == 3:
+				# sum of column heights
+				reward[rCnt] = heightBoard(simBoard)
+
+			elif action == 2:
+				# count the number of lines that can be removed
+				reward[rCnt] = maximizeLines(simBoard)
+			
 			rCnt += 1
 
 		# update the number of rotations
@@ -240,15 +392,14 @@ def minimizeBuriedHoles(board, curFig, figOrient):
 			minIdx = np.append(minIdx, w)
 
 	# select a random number from the optimal set
-	print minIdx.ndim
 	if minIdx.ndim != 0:
 		if len(minIdx) > 1:                                           # CHANGE THIS
-			action = minIdx[random.randint(0,len(minIdx)-1)]
+			configuration = minIdx[random.randint(0,len(minIdx)-1)]
 	else:
-		action = int(minIdx)
+		configuration = int(minIdx)
 
 	# find the location and orientation that corresponds to this action
-	result = np.where( possibilities == action )
+	result = np.where( possibilities == configuration+1 )
 
 	# rotate the initial orientation
 	rot = 0
@@ -260,8 +411,6 @@ def minimizeBuriedHoles(board, curFig, figOrient):
 
 		# update the number of rotations
 		rot += 1
-
-	##########################################################################
 
 	# translate the figure
 	figLoc = [int(finalTrans[int(result[0])][int(result[1])]), int(finalHeight[int(result[0])][int(result[1])])]
@@ -279,3 +428,22 @@ def minimizeBuriedHoles(board, curFig, figOrient):
 		horCnt += 1
 
 	return simBoard
+
+def plots():
+
+	# initialize figure
+	mpl.rcParams['legend.fontsize'] = 10
+	fig1 = plt.figure(1)
+	ax1 = fig1.gca()
+	ax1.set_xlabel('t [s]', fontsize=15)
+	ax1.set_ylabel('navError [ft]', fontsize=15)
+
+	ax1.plot(tSVOex[0:-1], navErrorSVO[0:-1], label='SDFC', linewidth=1, color=colorSVO, linestyle=linestyleSVO)
+	ax1.plot(tEKFex[0:-1], navErrorEKF[0:-1], label='Default', linewidth=1, color=colorEKF, linestyle=linestyleEKF)
+	
+	ax1.grid(grid)
+	ax1.legend(loc='upper left', prop={'size':13})
+	
+
+	# show the plots
+	plt.show()
