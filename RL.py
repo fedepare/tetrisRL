@@ -66,14 +66,7 @@ def features(board, prevLines, altitudeLast, weights, nCnt):
 	# value of the state
 	value = 0
 	for x in xrange(0,len(featVec)):
-		if x < 8:
-			value += featVec[x] * weights[nCnt][0]
-		elif x == 8:
-			value += featVec[x] * weights[nCnt][1]
-		elif x > 8 and x < 16:
-			value += featVec[x] * weights[nCnt][2]
-		else:
-			value += featVec[x] * weights[nCnt][3]
+		value += featVec[x] * weights[nCnt]
 		
 	return value
 
