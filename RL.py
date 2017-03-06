@@ -107,9 +107,9 @@ def features(board, prevLines, altitudeLast, weights, nCnt):
 				colTrans += 1
 
 	# store the features in a vector
-	featVec = [pileHeight, buriedHoles, connectedHoles, removedLines, altitudeDiff, maxDepthWell, cntWell, weigthedBlocks, landingHeight, rowTrans, colTrans]
+	# featVec = [pileHeight, buriedHoles, connectedHoles, removedLines, altitudeDiff, maxDepthWell, cntWell, weigthedBlocks, landingHeight, rowTrans, colTrans]
 
-	# featVec = [pileHeight, buriedHoles, connectedHoles, altitudeDiff, maxDepthWell]
+	featVec = [pileHeight, buriedHoles, connectedHoles, altitudeDiff, maxDepthWell]
 
 	# value of the state
 	value = 0
