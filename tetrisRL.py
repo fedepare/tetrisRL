@@ -237,6 +237,7 @@ while games < numGames:
     accumScore += lines
     if cntTries == triesW:
       print "Game: [%s] -> Lines: %s" % (games, float(accumScore) / triesW)
+      print "Current Weights"
       print weights[nCnt][:]
 
       # update nCnt
@@ -262,8 +263,9 @@ while games < numGames:
         for x in xrange(0,nFeat):
           accum = 0
           for y in xrange(1,len(idxBest)):
-            accum += weights[y][x]
+            accum += weights[idxBest[y]][x]
           muVec[x] = accum / len(idxBest)
+        print "New average"
         print muVec
 
         # create a copy of the board
@@ -272,10 +274,11 @@ while games < numGames:
         for x in xrange(0,nFeat):
           accum = 0
           for y in xrange(1,len(idxBest)):
-            accum += (weights[y][x] - muVec[x])**2
+            accum += (weights[idxBest[y]][x] - muVec[x])**2
           sigVec[x] = np.sqrt(accum / len(idxBest))
 
         curSig = np.asarray(sigVec)
+        print "New standard deviation"
         print curSig
 
         # obtain a new set of weights
@@ -324,6 +327,9 @@ while games < numGames:
    time.sleep(0.01) # velocity of the game
 
    # update the number of iterations
-   it += 1 
+   it += 1
+
+with open("pickle.dat", "wb") as f:
+    pickle.dump([muVec, sigVec], f)
 
 sys.exit(0)
