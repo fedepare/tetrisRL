@@ -107,16 +107,14 @@ def features(board, prevLines, altitudeLast, weights, nCnt):
 				colTrans += 1
 
 	# store the features in a vector
-	featVec = [pileHeight, buriedHoles, connectedHoles, removedLines, \
-			   altitudeDiff, maxDepthWell, cntWell, weigthedBlocks, landingHeight, \
-			   rowTrans, colTrans]
+	featVec = [pileHeight, buriedHoles, connectedHoles, removedLines, altitudeDiff, maxDepthWell, cntWell, weigthedBlocks, landingHeight, rowTrans, colTrans]
+
+	# featVec = [pileHeight, buriedHoles, connectedHoles, altitudeDiff, maxDepthWell]
 
 	# value of the state
 	value = 0
-	# for x in xrange(0,len(featVec)):
-	# 	value += featVec[x] * weights[nCnt][x]
 	for x in xrange(0,len(featVec)):
-		value += featVec[x] * weights[nCnt]
+		value += featVec[x] * weights[nCnt][x]
 
 	return value
 
@@ -262,7 +260,7 @@ def getNewBoard(board, curFig, figOrient, diffLines, altitudeLast, weights, nCnt
 	figLoc = [int(finalTrans[int(result[0])][int(result[1])]), int(finalHeight[int(result[0])][int(result[1])])]
 
 	# create a copy of the board
-	simBoard = np.asarray(board)	
+	simBoard = np.asarray(board)
 
 	# update the board
 	horCnt = 0
