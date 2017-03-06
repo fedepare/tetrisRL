@@ -37,6 +37,11 @@ n    = 100
 nCnt = 0
 rho  = 0.1
 
+# tries for each weight vector
+triesW     = 30
+cntTries   = 0
+accumScore = 0
+
 nFeat = 11
 
 muVec   = [0 for x in xrange(0, nFeat)]
@@ -46,9 +51,17 @@ for x in xrange(0,n):
   for y in xrange(0,nFeat):
     weights[x][y] = np.random.normal(muVec[y], sigVec[y], 1)
 
-nScore = [0 for x in xrange(0, n)]
+nScore = [0.0 for x in xrange(0, n)]
+
+# convergence flag and threshold
+convFlag = 0
+thr = 0.1
 
 while games < numGames:
+
+  # break the loop if convergence
+  if convFlag == 1:
+    break
 
   # definition of variables
   lines = 0
@@ -67,6 +80,7 @@ while games < numGames:
   b   = -1      # figure index (different from f)
   b1  = random.randint(0,6) # figure index in the next timestep(different from f)
   b2  = random.randint(0,6)
+
   p   = []      # array indicating the orientation of the figure
   lc  = [-9,0]  # position of the leftmost and upmost point of the figure x = [1-8]; y = [0-18];
   t   = 0
@@ -210,9 +224,12 @@ while games < numGames:
      if aux[1] == 5:
       lines += 1
 
+   ######################################################################################
+   ######################################################################################
+
    # game over
    if gv>=0:
-    print "Game: [%s, %s] -> Lines: %s" % (games, nCnt, lines)
+    print "Game: [%s, %s, %s] -> Lines: %s" % (games, nCnt, cntTries, lines)
 
     gs=z.render("GAME OVER",1,(255,255,255))
     gr=gs.get_rect()
@@ -223,52 +240,76 @@ while games < numGames:
       pd.flip()
       time.sleep(4)
 
-    # update nCnt
-    nScore[nCnt] = lines
-    nCnt += 1
-    if nCnt == n:
-      nCnt = 0
-      games += 1
+    # update cntTries
+    cntTries += 1
+    accumScore += lines
+    if cntTries == triesW:
+      print "Game: [%s] -> Lines: %s" % (games, float(accumScore) / triesW)
 
-      # select the best configurations
-      idxBest = [0 for x in xrange(0,int(rho*n))]
-      for x in xrange(0,int(rho*n)):
-        index, value = max(enumerate(nScore), key=operator.itemgetter(1))
-        idxBest[x] = index
-        nScore[index] = -1
+      # update nCnt
+      nScore[nCnt] = float(accumScore) / triesW
+      nCnt += 1
 
-      # update average and standard deviation
-      for x in xrange(0,nFeat):
-        accum = 0
-        for y in xrange(1,len(idxBest)):
-          accum += weights[y][x]
-        muVec[x] = accum / len(idxBest)
+      # reset counters
+      cntTries   = 0
+      accumScore = 0
 
-      # create a copy of the board
-      fede = np.asarray(sigVec)
+      if nCnt == n:
+        nCnt = 0
+        games += 1
 
-      for x in xrange(0,nFeat):
-        accum = 0
-        for y in xrange(1,len(idxBest)):
-          accum += (weights[y][x] - muVec[x])**2
-        sigVec[x] = np.sqrt(accum / len(idxBest))
+        print nScore
 
-      fede = np.vstack((fede, sigVec))
-      print fede
+        # select the best configurations
+        idxBest = [0 for x in xrange(0,int(rho*n))]
+        for x in xrange(0,int(rho*n)):
+          index, value = max(enumerate(nScore), key=operator.itemgetter(1))
+          idxBest[x] = index
+          nScore[index] = -1
 
-      # obtain a new set of weights
-      weights = np.zeros((n, nFeat))
-      for x in xrange(0,n):
-        for y in xrange(0,nFeat):
-          weights[x][y] = np.random.normal(muVec[y], sigVec[y], 1)
+        print idxBest
 
-      # reset the score matrix
-      nScore = [0 for x in xrange(0, n)]
+        # update average and standard deviation
+        for x in xrange(0,nFeat):
+          accum = 0
+          for y in xrange(1,len(idxBest)):
+            accum += weights[y][x]
+          muVec[x] = accum / len(idxBest)
+
+        # create a copy of the board
+        prevSig = np.asarray(sigVec)
+
+        for x in xrange(0,nFeat):
+          accum = 0
+          for y in xrange(1,len(idxBest)):
+            accum += (weights[y][x] - muVec[x])**2
+          sigVec[x] = np.sqrt(accum / len(idxBest))
+
+        curSig = np.asarray(sigVec)
+        print curSig
+        
+        # check convergence
+        convFlag = 0
+        for x in xrange(0,len(curSig)):
+          if x == 0 and abs(curSig[x] - prevSig[x]) < thr:
+            convFlag = 1
+          elif convFlag == 1 and abs(curSig[x] - prevSig[x]) > thr:
+            convFlag = 0
+            break
+
+        # obtain a new set of weights
+        weights = np.zeros((n, nFeat))
+        for x in xrange(0,n):
+          for y in xrange(0,nFeat):
+            weights[x][y] = np.random.normal(muVec[y], sigVec[y], 1)
+
+        # reset the score matrix
+        nScore = [0.0 for x in xrange(0, n)]
+
+   
 
     break
     
-   ######################################################################################
-   ######################################################################################
    if it == 1 and not cr:
 
      # choose the pose of the new block
