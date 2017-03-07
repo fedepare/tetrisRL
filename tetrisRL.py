@@ -71,8 +71,6 @@ while games < numGames:
   s   = 12
   brt = Rect((100,0,s,s))
   b   = -1      # figure index (different from f)
-  b1  = random.randint(0,6) # figure index in the next timestep(different from f)
-  b2  = random.randint(0,6)
 
   p   = []      # array indicating the orientation of the figure
   lc  = [-9,0]  # position of the leftmost and upmost point of the figure x = [1-8]; y = [0-18];
@@ -122,13 +120,11 @@ while games < numGames:
    
    # initialization of a new figure
    if b==-1:
-    b  = b1
-    b1 = b2
+    b  = random.randint(0,6)
     p  = pc[b];
     lc = [5-len(p)/2,0]
-    b2 = random.randint(0,6)
 
-  # update the location of the figure
+   # update the location of the figure
    if not t%bt or rh:
     op=[p[:],lc[:]]
     lc[1] +=1
