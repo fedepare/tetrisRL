@@ -92,6 +92,9 @@ while games < numGames:
   # altitude at which the previous piece landed
   altitudeLast = 19
 
+  # number of bricks eliminated from the last piece added
+  bricksLastPiece = 0
+
   if display:
     pg.key.set_repeat(200,100)
     crs = pg.Surface((8*s,s))
@@ -317,13 +320,13 @@ while games < numGames:
    if it == 1 and not cr:
 
      # choose the pose of the new block
-     newboard, figLoc = getNewBoard(f, b, p, blockLines, altitudeLast, weights, nCnt)
+     newboard, figLoc, bricksLastPiece = getNewBoard(f, b, p, blockLines, bricksLastPiece, altitudeLast, weights, nCnt)
 
      # reset the panel
      for h in xrange(0,len(f)):
        for w in xrange(0,len(f[0])):
          f[h][w] = newboard[h][w]
-         if f[h][w] == 10:
+         if f[h][w] == 14:
            f[h][w] = b + 2
 
      b  = -20

@@ -14,7 +14,7 @@ warnings.filterwarnings("ignore")
 ###########
 
 
-def features(board, prevLines, altitudeLast, weights, nCnt):
+def features(board, prevLines, bricksLastPiece, altitudeLast, weights, nCnt):
 
 	# variable definition
 	width  = len(board[0])
@@ -37,22 +37,15 @@ def features(board, prevLines, altitudeLast, weights, nCnt):
 			if board[h][w+1] == 0:
 				buriedHoles += 1
 
-	# 3. connected buried holes
-	connectedHoles = 0
-	for w in xrange(0,len(contour)):
-		hStart = height - 1 - contour[w]
-		for h in xrange(hStart,height-1):
-			if board[h][w+1] == 0 and board[h-1][w+1] != 0:
-				connectedHoles += 1
-
-	# 4. removed lines
+	# 3. removed lines
 	removedLines = prevLines
 
-	# 5. altitude difference
+	# 4. altitude difference
 	altitudeDiff = pileHeight - min(contour)
 
-	# 6. maximum well depth (single width)
-	# 7. sum of all wells
+	# 5. maximum well depth (single width)
+	# 6. sum of all wells
+	# 7. sum of wells depth
 	diffHeight = [0 for x in range(width-3)]
 	for w in xrange(0,len(contour)-1):
 		diffHeight[w] = contour[w+1] - contour[w]
@@ -78,19 +71,10 @@ def features(board, prevLines, altitudeLast, weights, nCnt):
 				maxDepthWell = depth
 			cntWell += 1
 
-	# 8. weighted blocks
-	weigthedBlocks = 0
-	for w in xrange(0,len(contour)):
-		hStart = height - 1 - contour[w]
-		for h in xrange(hStart,height-1):
-			n = height - 1 - h
-			if board[h][w+1] != 0:
-				weigthedBlocks += n
-
-	# 9. landing height
+	# 8. landing height
 	landingHeight = height - 1 - altitudeLast
 
-	# 10. row transitions
+	# 9. row transitions
 	rowTrans = 0
 	hStart   = height - 1 - max(contour)
 	for h in xrange(hStart,height-1):
@@ -100,7 +84,7 @@ def features(board, prevLines, altitudeLast, weights, nCnt):
 			elif board[h][w+1] != 0 and board[h][w+2] == 0:
 				rowTrans += 1
 
-	# 11. column transitions
+	# 10. column transitions
 	colTrans = 0
 	for w in xrange(0,len(contour)-1):
 		hStart   = height - 1 - contour[w]
@@ -110,13 +94,34 @@ def features(board, prevLines, altitudeLast, weights, nCnt):
 			elif board[h-1][w+1] != 0 and board[h][w+1] == 0:
 				colTrans += 1
 
+	# bricks of the current piece removed
+	hStart    = height - 1 - min(contour)
+	cntEroded = 0
+	lineFlag  = 0
+	for h in xrange(hStart,height-1):
+		accum  = 0
+		for w in xrange(0,len(contour)):
+			if board[h][w+1] == 0:
+				lineFlag  = 0
+				accum = 0
+				break
+			else: 
+				lineFlag = 1
+				if board[h][w+1] == 14:
+					accum += 1
+
+		if lineFlag == 0:
+			break
+		else:
+			cntEroded += accum
+
 	# 12. eroded piece cells
-	erodedCells = removedLines * removedLines * len(contour)
+	erodedCells = removedLines * bricksLastPiece
 
 	# store the features in a vector
-	# featVec = [pileHeight, buriedHoles, connectedHoles, removedLines, altitudeDiff, maxDepthWell, cntWell, weigthedBlocks, landingHeight, rowTrans, colTrans]
+	# featVec = [pileHeight, buriedHoles, removedLines, altitudeDiff, maxDepthWell, cntWell, weigthedBlocks, landingHeight, rowTrans, colTrans]
 
-	# featVec = [pileHeight, buriedHoles, connectedHoles, altitudeDiff, maxDepthWell]
+	# featVec = [pileHeight, buriedHoles, altitudeDiff, maxDepthWell]
 
 	# Dellacherie features
 	featVec = [landingHeight, erodedCells, rowTrans, colTrans, buriedHoles, depthCnt]
@@ -126,9 +131,9 @@ def features(board, prevLines, altitudeLast, weights, nCnt):
 	for x in xrange(0,len(featVec)):
 		value += featVec[x] * weights[nCnt][x]
 
-	return value
+	return value, cntEroded
 
-def getNewBoard(board, curFig, figOrient, diffLines, altitudeLast, weights, nCnt):
+def getNewBoard(board, curFig, figOrient, diffLines, bricksLastPiece, altitudeLast, weights, nCnt):
 
 	# initial orientation
 	initOrient = figOrient
@@ -160,7 +165,8 @@ def getNewBoard(board, curFig, figOrient, diffLines, altitudeLast, weights, nCnt
 		rotations = 3
 
 	# create reward vector
-	stateValue = [-float('Inf') for x in range(32)]
+	stateValue    = [-float('Inf') for x in range(32)]
+	bricksRemoved = [-float('Inf') for x in range(32)]
 	rCnt       = 0
 
 	# create a matrix to store the translations used with each rotation
@@ -233,7 +239,7 @@ def getNewBoard(board, curFig, figOrient, diffLines, altitudeLast, weights, nCnt
 				figLoc[1] += 1
 
 			# extract the features of the new board
-			stateValue[rCnt] = features(simBoard, diffLines, altitudeLast, weights, nCnt)
+			stateValue[rCnt], bricksRemoved[rCnt] = features(simBoard, diffLines, bricksLastPiece, altitudeLast, weights, nCnt)
 			rCnt += 1
 
 		# update the number of rotations
@@ -251,6 +257,9 @@ def getNewBoard(board, curFig, figOrient, diffLines, altitudeLast, weights, nCnt
 			configuration = maxIdx[random.randint(0,len(maxIdx)-1)]
 	else:
 		configuration = int(maxIdx)
+
+	# bricks removed by the configuration with the maximum value
+	cntEroded =  bricksRemoved[configuration]
 
 	# find the location and orientation that corresponds to this action
 	result = np.where( possibilities == configuration+1 )
@@ -278,8 +287,8 @@ def getNewBoard(board, curFig, figOrient, diffLines, altitudeLast, weights, nCnt
 		verCnt = 0
 		for k in l:
 			if k:
-				simBoard[verCnt+figLoc[1]-1][horCnt+figLoc[0]] = 10
+				simBoard[verCnt+figLoc[1]-1][horCnt+figLoc[0]] = 14
 			verCnt += 1
 		horCnt += 1
 
-	return simBoard, figLoc
+	return simBoard, figLoc, cntEroded
