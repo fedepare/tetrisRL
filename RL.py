@@ -59,17 +59,21 @@ def features(board, prevLines, altitudeLast, weights, nCnt):
 
 	maxDepthWell = 0
 	cntWell      = 0
+	depthCnt     = 0
 	for w in xrange(0,len(diffHeight)-1):
 		if w == 0 and diffHeight[w] > 0:
 			maxDepthWell = diffHeight[w]
+			depthCnt    += diffHeight[w]
 			cntWell += 1
 		elif diffHeight[w] < 0 and diffHeight[w+1] > 0:
 			depth = min([abs(diffHeight[w]), abs(diffHeight[w+1])])
+			depthCnt += depth
 			if depth > maxDepthWell:
 				maxDepthWell = depth
 			cntWell += 1
 		elif w+1 == len(diffHeight)-1 and diffHeight[w+1] < 0:
 			depth = abs(diffHeight[w+1])
+			depthCnt += depth
 			if depth > maxDepthWell:
 				maxDepthWell = depth
 			cntWell += 1
@@ -106,10 +110,16 @@ def features(board, prevLines, altitudeLast, weights, nCnt):
 			elif board[h-1][w+1] != 0 and board[h][w+1] == 0:
 				colTrans += 1
 
+	# 12. eroded piece cells
+	erodedCells = removedLines * removedLines * len(contour)
+
 	# store the features in a vector
 	# featVec = [pileHeight, buriedHoles, connectedHoles, removedLines, altitudeDiff, maxDepthWell, cntWell, weigthedBlocks, landingHeight, rowTrans, colTrans]
 
-	featVec = [pileHeight, buriedHoles, connectedHoles, altitudeDiff, maxDepthWell]
+	# featVec = [pileHeight, buriedHoles, connectedHoles, altitudeDiff, maxDepthWell]
+
+	# Dellacherie features
+	featVec = [landingHeight, erodedCells, rowTrans, colTrans, buriedHoles, depthCnt]
 
 	# value of the state
 	value = 0

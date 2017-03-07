@@ -34,7 +34,8 @@ games    = 0
 numGames = 40
 
 # variable initialization
-lines = 0
+blockLines  = 0
+accumLines  = 0
 performance = [0 for x in xrange(0, numGames)]
 
 # initial normal distribution
@@ -45,10 +46,9 @@ rho  = 0.1
 # tries for each weight vector
 L     = 5
 cntL  = 0
-accumLines = 0
 
 # number of features used to represent the state of the board
-nFeat = 5
+nFeat = 6
 
 # initial normal distribution
 muVec   = np.zeros((numGames, nFeat))
@@ -229,6 +229,7 @@ while games < numGames:
      aux = cr[0]
      if aux[1] == 5:
       lines += 1
+      blockLines += 1
 
    ######################################################################################
    ######################################################################################
@@ -316,7 +317,7 @@ while games < numGames:
    if it == 1 and not cr:
 
      # choose the pose of the new block
-     newboard, figLoc = getNewBoard(f, b, p, lines, altitudeLast, weights, nCnt)
+     newboard, figLoc = getNewBoard(f, b, p, blockLines, altitudeLast, weights, nCnt)
 
      # reset the panel
      for h in xrange(0,len(f)):
@@ -331,8 +332,8 @@ while games < numGames:
      rh = 0
      p  = []
      it = 0
-     prevLines    = lines
      altitudeLast = figLoc[1]
+     blockLines   = 0
 
      time.sleep(0)
 
