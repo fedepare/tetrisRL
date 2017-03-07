@@ -29,6 +29,7 @@ sk=pd.get_surface()
 # number of games to be playes
 games    = 0
 numGames = 100
+performance = [0 for x in xrange(0, numGames)]
 lines    = 0
 accum    = 0
 
@@ -237,8 +238,6 @@ while games < numGames:
     accumScore += lines
     if cntTries == triesW:
       print "Game: [%s] -> Lines: %s" % (games, float(accumScore) / triesW)
-      print "Current Weights"
-      print weights[nCnt][:]
 
       # update nCnt
       nScore[nCnt] = float(accumScore) / triesW
@@ -254,10 +253,17 @@ while games < numGames:
 
         # select the best configurations
         idxBest = [0 for x in xrange(0,int(rho*n))]
+        accum   = 0
         for x in xrange(0,int(rho*n)):
           index, value = max(enumerate(nScore), key=operator.itemgetter(1))
+          accum += value
           idxBest[x] = index
           nScore[index] = -1
+
+        # get the average number of lines for the best configurations
+        performance[games -1] = float(accum) / (rho*n)
+        print "Performance:"
+        print performance
 
         # update average and standard deviation
         for x in xrange(0,nFeat):
@@ -265,8 +271,6 @@ while games < numGames:
           for y in xrange(1,len(idxBest)):
             accum += weights[idxBest[y]][x]
           muVec[x] = accum / len(idxBest)
-        print "New average"
-        print muVec
 
         # create a copy of the board
         prevSig = np.asarray(sigVec)
@@ -278,7 +282,7 @@ while games < numGames:
           sigVec[x] = np.sqrt(accum / len(idxBest))
 
         curSig = np.asarray(sigVec)
-        print "New standard deviation"
+        print "Standard deviation:"
         print curSig
 
         # obtain a new set of weights
@@ -330,6 +334,6 @@ while games < numGames:
    it += 1
 
 with open("pickle.dat", "wb") as f:
-    pickle.dump([muVec, sigVec], f)
+    pickle.dump([muVec, sigVec, performance], f)
 
 sys.exit(0)
