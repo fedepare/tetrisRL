@@ -1,0 +1,152 @@
+\documentclass[]{aiaa-tc}% insert '[draft]' option to show overfull boxes
+
+ \usepackage{varioref}%  smart page, figure, table, and equation referencing
+ \usepackage{wrapfig}%   wrap figures/tables in text (i.e., Di Vinci style)
+ \usepackage{threeparttable}% tables with footnotes
+ \usepackage{dcolumn}%   decimal-aligned tabular math columns
+  \newcolumntype{d}{D{.}{.}{-1}}
+ \usepackage{nomencl}%   nomenclature generation via makeindex
+  \makeglossary
+ \usepackage{subfigure}% subcaptions for subfigures
+ \usepackage{subfigmat}% matrices of similar subfigures, aka small mulitples
+ \usepackage{fancyvrb}%  extended verbatim environments
+  \fvset{fontsize=\footnotesize,xleftmargin=2em}
+ \usepackage{lettrine}%  dropped capital letter at beginning of paragraph
+ \usepackage[dvips]{dropping}% alternative dropped capital package
+ \usepackage[colorlinks]{hyperref}%  hyperlinks [must be loaded after dropping]
+\usepackage{amsmath}
+\usepackage{subfig}
+\usepackage{blindtext}
+\usepackage{pgfplots}
+\pgfplotsset{compat=newest}
+\usetikzlibrary{plotmarks}
+\usepackage{grffile}
+
+ \title{Aerodynamic Model Identification using \\the Two-Step Approach}
+
+ \author{
+  Federico Paredes Vall\'es%
+    \thanks{Federico Paredes Vall\'es (4439953) is with the Department of Control and Simulation of the Faculty of Aerospace Engineering, Delft University of Technology. Email: F.ParedesValles@student.tudelft.nl.}\\
+  {\normalsize\itshape
+   System Identification of Aerospace Vehicles (AE4320), Delft University of Technology}\\
+  {\normalsize\itshape }
+ }
+
+ % Data used by 'handcarry' option
+ \AIAApapernumber{YEAR-NUMBER}
+ \AIAAconference{Conference Name, Date, and Location}
+ \AIAAcopyright{\AIAAcopyrightD{YEAR}}
+
+ % Define commands to assure consistent treatment throughout document
+ \newcommand{\eqnref}[1]{(\ref{#1})}
+ \newcommand{\class}[1]{\texttt{#1}}
+ \newcommand{\package}[1]{\texttt{#1}}
+ \newcommand{\file}[1]{\texttt{#1}}
+ \newcommand{\BibTeX}{\textsc{Bib}\TeX}
+ 
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+
+\makeatletter
+\def\BState{\Statex\hskip-\ALG@thistlm}
+\makeatother
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+Abstract goes here...
+\vspace{40pt}
+\end{abstract}
+
+
+\section{Introduction}
+
+\dropping{2}{T}{\textsc{he}}...
+
+\section{Section II}
+
+\section{Section III}
+
+\subsection{Subsection}
+
+\section{Section IV}
+
+\section{Conclusions}
+
+\begin{thebibliography}{9}% maximum number of references (for label width)
+
+\bibitem{rebek:82bk}
+Braga de Mendon\c ca, C., Moreira Hemerly, E., and Sandoval G\'oes, L.C.\textit{ Adaptive Stochastic Filtering for Online Aircraft Flight Path Reconstruction.} Journal of Aircraft, Vol. 44, No. 5, September-October 2007.
+
+\bibitem{rebek:82bk}
+Sieberling, S., Chu, Q.P., and Mulder, J.A.\textit{ Robust Flight Control Using Incremental Nonlinear Dynamic Inversion and Angular Acceleration Prediction.} Journal of Guidance, Control, and Dynamics, Vol. 33, No. 6, November-December 2010.
+
+\bibitem{rebek:82bk}
+Norton, W.J.\textit{ Balancing Modeling and Simulation with Flight test in Military Aircraft Development.} AGARD CP-593, December 1997.
+
+\bibitem{rebek:82bk}
+Jategaonkar, R., Fischenberg, D., and von Gruenhagen, W.\textit{ Aerodynamic Modeling and System Identification from Flight Data - Recent Applications at DLR.} Journal of Aircraft, Vol. 41, July-August 2004.
+
+\bibitem{rebek:82bk}
+Jonkers, H.L.\textit{ Application of the Kalman Filter to Flight Path Reconstruction from Flight Test Data Including Estimation of Instrumental Bias Error Corrections.} Department of Aerospace Engineering, Rept. VTH-162, 1976.
+
+\bibitem{rebek:82bk}
+Klein, V., and Schiess, J.R.\textit{ Compatibility Check of Measured Aircraft Responses Using Kinematic Equations and Extended Kalman Filter.} NASA TN D-8514, August 1977.
+
+\bibitem{rebek:82bk}
+Teixeira, B.O.S., Torres, L.A.B., Iscold, P., and Aguirre, L.A.\textit{ Flight path reconstruction - A comparison of nonlinear Kalman filter and smoother algorithms.} Aerospace Science and Technology, August 2010.
+
+\bibitem{rebek:82bk}
+Grauer, J.A.\textit{ Real-Time Parameter Estimation Using Output Error.} NASA Langley Research Center.
+
+\bibitem{rebek:82bk}
+Mulder, J.A., Chu, Q.P., Sridhar, J.K., Breeman, J.H., and Laban, M.\textit{ Non-linear aircraft flight path reconstruction review and new advances.} Progress in Aerospace Sciences, Vol. 35, No. 7, October 1999.
+
+\bibitem{rebek:82bk}
+Teixeira, B.O.S., Torres, L.A.B., Iscold, P., and Aguirre, L.A.\textit{ Flight Path Reconstruction using the Unscented Kalman Filter Algorithm.} 18th International Congress of Mechanical Engineering, November 2005.
+
+\bibitem{rebek:82bk}
+Girich, C., and Ravindra, J.\textit{ Aerodynamic Parameter Estimation from Flight Data Applying Extended and Unscented Kalman Filter.} Journal of Aerospace Science and Technology, Vol. 14, No. 2, 2010.
+
+\bibitem{rebek:82bk}
+Chu, Q.P., Mulder, J.A., and van Woerkom, P.T.L.M.\textit{ Modified Recursive Maximum Likelihood Adaptive Filter for Nonlinear Aircraft Flight-Path Reconstruction.} Journal of Guidance, Control, and Dynamics, November-December 1996.
+
+\bibitem{rebek:82bk}
+Babuska, R.\textit{ Knowledge-Based Control Systems, Lecture Notes.} Delft University of Technology, January 2010.
+
+\bibitem{rebek:82bk}
+Ferrari, S., and Stengel, R.F.\textit{ Smooth function approximation using neural networks.} IEEE Transactions On Neural Networks, Januray 2005.
+
+\bibitem{rebek:82bk}
+Akpan, V.A., and Hassapis, G.D.\textit{ Nonlinear model identification and adaptive model predictive control using neural networks.} ISA Transactions, Vol. 50, No. 2, April 2011.
+
+\bibitem{rebek:82bk}
+de Visser, C.C.\textit{ Global Nonlinear Model Identification with Multivariate Splines.} Published PhD thesis, Delft University of Technology, 2011.
+
+\bibitem{rebek:82bk}
+de Visser, C.C., and Mulder, J.A.\textit{ Global Nonlinear Aerodynamic Model Identification with Multivariate Splines.} AIAA Atmospheric Flight Mechanics Conference, August 2009.
+
+\bibitem{rebek:82bk}
+Visser, T., de Visser, C.C., and van Kampen, E.\textit{ Quadrotor System Identification using the Multivariate Multiplex B-Spline.} AIAA Atmospheric Flight Mechanics Conference, January 2015.
+
+\bibitem{rebek:82bk}
+Etkin, B.\textit{ Dynamics of atmospheric flight.} Wiley, 1972.
+
+\bibitem{rebek:82bk}
+Groves, P.D.\textit{ Principles of GNSS, Inertial, and Multisensor Integrated Navigation Systems.} Artech House, 2008.
+
+\bibitem{rebek:82bk}
+de Visser, C., Pool, D., and van Kampen, E.\textit{ System Identification of Aerospace Vehicles, Lecture Notes.} Delft University of Technology, April 2016.
+
+\bibitem{rebek:82bk}
+Roskam, J.\textit{ Airplane Flight Dynamics and Automatic Flight Controls, Part I.} Design, Analysis and Research Corporation, 2001.
+
+\bibitem{rebek:82bk}
+Puntanen, S., and Styan, G.P.H.\textit{ The Equality of the Ordinary Least Squares Estimator and the Best Linear Unbiased Estimator.} The American Statician, Val. 43, 1989.
+
+
+\end{thebibliography}
+
+\end{document}
