@@ -17,21 +17,25 @@ pg  = pygame
 pd  = pg.display 
 cdc = copy.deepcopy
 
+display = 0
+
 #########
 # MAIN
 #########
 
 # game initialization
-pg.init()
-pd.set_mode((320,240),RESIZABLE)
-sk=pd.get_surface()
+if display:
+  pg.init()
+  pd.set_mode((320,240),RESIZABLE)
+  sk=pd.get_surface()
 
-# number of games to be playes
+# number of games to be played
 games    = 0
-numGames = 100
+numGames = 40
+
+# variable initialization
+lines = 0
 performance = [0 for x in xrange(0, numGames)]
-lines    = 0
-accum    = 0
 
 # initial normal distribution
 n    = 100
@@ -39,19 +43,27 @@ nCnt = 0
 rho  = 0.1
 
 # tries for each weight vector
-triesW     = 30
-cntTries   = 0
-accumScore = 0
+L     = 5
+cntL  = 0
+accumLines = 0
 
+# number of features used to represent the state of the board
 nFeat = 5
 
-muVec   = [0 for x in xrange(0, nFeat)]
-sigVec  = [10 for x in xrange(0, nFeat)]
+# initial normal distribution
+muVec   = np.zeros((numGames, nFeat))
+sigVec  = np.zeros((numGames, nFeat))
+for x in xrange(0,len(sigVec)):
+  for y in xrange(0,len(sigVec[0])):
+    sigVec[x][y] = 10
+
+# weight initialization
 weights = np.zeros((n, nFeat))
 for x in xrange(0,n):
   for y in xrange(0,nFeat):
-    weights[x][y] = np.random.normal(muVec[y], sigVec[y], 1)
+    weights[x][y] = np.random.normal(muVec[games][y], sigVec[games][y], 1)
 
+# vector use to select the best weight configurations
 nScore = [0.0 for x in xrange(0, n)]
 
 while games < numGames:
@@ -80,14 +92,16 @@ while games < numGames:
   # altitude at which the previous piece landed
   altitudeLast = 19
 
-  pg.key.set_repeat(200,100)
-  rh  = 0
+  if display:
+    pg.key.set_repeat(200,100)
+    crs = pg.Surface((8*s,s))
+    crs.fill((255,0,0))
+    crs.set_alpha(100)
+    z   = pg.font.Font("c.ttf",14)
+
   cr  = []
-  crs = pg.Surface((8*s,s))
-  crs.fill((255,0,0))
-  crs.set_alpha(100)
+  rh  = 0
   gv  = -1
-  z   = pg.font.Font("c.ttf",14)
   _=0
 
   it  = 0 # number of iterations
@@ -99,11 +113,12 @@ while games < numGames:
   # the game
   while 1:
 
-   sk.fill((0,0,0));
-   _su=z.render("Score " + str(_),1,(255,255,255))
-   _rect=_su.get_rect()
-   _rect.bottomright=(310,230)
-   sk.blit(_su,_rect)
+   if display:
+     sk.fill((0,0,0));
+     _su=z.render("Score " + str(_),1,(255,255,255))
+     _rect=_su.get_rect()
+     _rect.bottomright=(310,230)
+     sk.blit(_su,_rect)
 
    if gv>-1:
      b=10
@@ -193,15 +208,17 @@ while games < numGames:
         k=b+2
       except:
         pass
-      sk.fill([x*0.75 for x in cols[k]],brt.move(r*s,c*s))
-      sk.fill(cols[k],brt.move(r*s,c*s).inflate(-4,-4))
+      if display:
+        sk.fill([x*0.75 for x in cols[k]],brt.move(r*s,c*s))
+        sk.fill(cols[k],brt.move(r*s,c*s).inflate(-4,-4))
       r+=1
      c+=1
    
    # cr only has values when a row is completed
    for r in cr:
-    crs.set_alpha(r[1])
-    sk.blit(crs,(100+s,r[0]*s))
+    if display:
+      crs.set_alpha(r[1])
+      sk.blit(crs,(100+s,r[0]*s))
     cp=cr.index(r)
     cr[cp][-1]-=5
     if cr[cp][-1]<=0:
@@ -218,34 +235,42 @@ while games < numGames:
 
    # game over
    if gv>=0:
-    print "Game: [%s, %s, %s] -> Lines: %s" % (games, nCnt, cntTries, lines)
+    print "Game: [%s, %s, %s] -> Lines: %s" % (games, nCnt, cntL, lines)
 
-    gs=z.render("GAME OVER",1,(255,255,255))
-    gr=gs.get_rect()
-    gr.center=(160,120)
-    sk.blit(gs,gr)
+    if display:
+      gs=z.render("GAME OVER",1,(255,255,255))
+      gr=gs.get_rect()
+      gr.center=(160,120)
+      sk.blit(gs,gr)
 
     if gv==99:
-      pd.flip()
-      time.sleep(4)
+      if display:
+        pd.flip()
+        time.sleep(4)
 
-    # update cntTries
-    cntTries += 1
-    accumScore += lines
-    if cntTries == triesW:
-      print "Game: [%s] -> Lines: %s" % (games, float(accumScore) / triesW)
+    # update cntL
+    cntL += 1
 
-      # update nCnt
-      nScore[nCnt] = float(accumScore) / triesW
+    # accumulate the lines for the computation of the average
+    accumLines += lines
+
+    # weight configuration tested
+    if cntL == L:
+      print "Game: [%s] -> Lines: %s" % (games, float(accumLines) / L)
+
+      # update the performance vector and the counter
+      nScore[nCnt] = float(accumLines) / L
       nCnt += 1
 
       # reset counters
-      cntTries   = 0
-      accumScore = 0
+      cntL       = 0
+      accumLines = 0
 
+      # all weight configurations tested
       if nCnt == n:
-        nCnt = 0
-        games += 1
+
+        # update counters
+        nCnt   = 0
 
         # select the best configurations
         idxBest = [0 for x in xrange(0,int(rho*n))]
@@ -257,7 +282,7 @@ while games < numGames:
           nScore[index] = -1
 
         # get the average number of lines for the best configurations
-        performance[games -1] = float(accum) / (rho*n)
+        performance[games] = float(accum) / (rho*n)
         print "Performance:"
         print performance
 
@@ -266,29 +291,25 @@ while games < numGames:
           accum = 0
           for y in xrange(1,len(idxBest)):
             accum += weights[idxBest[y]][x]
-          muVec[x] = accum / len(idxBest)
-
-        # create a copy of the board
-        prevSig = np.asarray(sigVec)
+          muVec[games][x] = accum / len(idxBest)
 
         for x in xrange(0,nFeat):
           accum = 0
           for y in xrange(1,len(idxBest)):
-            accum += (weights[idxBest[y]][x] - muVec[x])**2
-          sigVec[x] = np.sqrt(accum / len(idxBest))
-
-        curSig = np.asarray(sigVec)
-        print "Standard deviation:"
-        print curSig
+            accum += (weights[idxBest[y]][x] - muVec[games][x])**2
+          sigVec[games][x] = np.sqrt(accum / len(idxBest))
 
         # obtain a new set of weights
         weights = np.zeros((n, nFeat))
         for x in xrange(0,n):
           for y in xrange(0,nFeat):
-            weights[x][y] = np.random.normal(muVec[y], sigVec[y], 1)
+            weights[x][y] = np.random.normal(muVec[games][y], sigVec[games][y], 1)
 
         # reset the score matrix
         nScore = [0.0 for x in xrange(0, n)]
+
+        # update counters
+        games += 1
 
     break
     
@@ -320,8 +341,8 @@ while games < numGames:
 
    if gv>=0:
     continue
-
-   pd.flip() # update the contents of the entire display
+   if display:
+      pd.flip() # update the contents of the entire display
    t+=1
    t2+=1
    time.sleep(0.01) # velocity of the game
@@ -330,6 +351,7 @@ while games < numGames:
    it += 1
 
 with open("pickle.dat", "wb") as f:
-    pickle.dump([muVec, sigVec, performance], f)
+    pickle.dump([muVec, sigVec], f)
 
-sys.exit(0)
+if display:
+  sys.exit(0)
