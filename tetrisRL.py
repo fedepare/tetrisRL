@@ -17,7 +17,7 @@ pg  = pygame
 pd  = pg.display 
 cdc = copy.deepcopy
 
-display = 0
+display = 1
 
 #########
 # MAIN
@@ -34,7 +34,6 @@ games    = 0
 numGames = 40
 
 # variable initialization
-blockLines  = 0
 accumLines  = 0
 performance = [0 for x in xrange(0, numGames)]
 
@@ -48,14 +47,18 @@ L     = 5
 cntL  = 0
 
 # number of features used to represent the state of the board
-nFeat = 6
+nFeat = 2
 
 # initial normal distribution
 muVec   = np.zeros((numGames, nFeat))
+for x in xrange(0,len(muVec)):
+  for y in xrange(0,len(muVec[0])):
+    muVec[x][y] = 0
+
 sigVec  = np.zeros((numGames, nFeat))
 for x in xrange(0,len(sigVec)):
   for y in xrange(0,len(sigVec[0])):
-    sigVec[x][y] = 10
+    sigVec[x][y] = 5
 
 # weight initialization
 weights = np.zeros((n, nFeat))
@@ -76,7 +79,7 @@ while games < numGames:
   cols  = [(0,0,0),(100,100,100),(10,100,225),(0,150,220),(0,220,150),(60,200,10),(180,210,5),(210,180,10),(100,200,170)]
 
   # f is the current state of the board
-  f=[[1]+[0 for x in range(8)]+[1] for x in range(19)]+[[1 for x in range(10)]]
+  f=[[1]+[0 for x in range(10)]+[1] for x in range(19)]+[[1 for x in range(12)]]
 
   # game stuff
   of  = cdc(f)
@@ -88,12 +91,6 @@ while games < numGames:
   lc  = [-9,0]  # position of the leftmost and upmost point of the figure x = [1-8]; y = [0-18];
   t   = 0
   bt  = 60
-
-  # altitude at which the previous piece landed
-  altitudeLast = 19
-
-  # number of bricks eliminated from the last piece added
-  bricksLastPiece = 0
 
   if display:
     pg.key.set_repeat(200,100)
@@ -139,7 +136,7 @@ while games < numGames:
    # initialization of a new figure
    if b==-1:
     b  = random.randint(0,6)
-    p  = pc[b];
+    p  = pc[b]
     lc = [5-len(p)/2,0]
 
    # update the location of the figure
@@ -161,11 +158,18 @@ while games < numGames:
      while c+lc[0]>8:
       lc[0]-=1
      if f[r+lc[1]][c+lc[0]] and k:
-      if lc[1]==0:
+      # feature out of the board
+      if lc[1]<=0:
         gv=10
       rx=1
      r+=1
     c+=1
+
+    # detect feature out of the board
+    for x in xrange(0,len(f[0])):
+      if f[19][x] != 1:
+        gv=10
+        rx=1
 
    # update the board with a fallen piece
    if rx and not nor:
@@ -232,14 +236,12 @@ while games < numGames:
      aux = cr[0]
      if aux[1] == 5:
       lines += 1
-      blockLines += 1
 
    ######################################################################################
    ######################################################################################
 
    # game over
    if gv>=0:
-    print "Game: [%s, %s, %s] -> Lines: %s" % (games, nCnt, cntL, lines)
 
     if display:
       gs=z.render("GAME OVER",1,(255,255,255))
@@ -250,7 +252,6 @@ while games < numGames:
     if gv==99:
       if display:
         pd.flip()
-        time.sleep(4)
 
     # update cntL
     cntL += 1
@@ -260,7 +261,7 @@ while games < numGames:
 
     # weight configuration tested
     if cntL == L:
-      print "Game: [%s] -> Lines: %s" % (games, float(accumLines) / L)
+      print "Game: [%s, %s] -> Lines: %s" % (games, nCnt, float(accumLines) / L)
 
       # update the performance vector and the counter
       nScore[nCnt] = float(accumLines) / L
@@ -296,6 +297,7 @@ while games < numGames:
           for y in xrange(1,len(idxBest)):
             accum += weights[idxBest[y]][x]
           muVec[games][x] = accum / len(idxBest)
+        print muVec
 
         for x in xrange(0,nFeat):
           accum = 0
@@ -320,7 +322,7 @@ while games < numGames:
    if it == 1 and not cr:
 
      # choose the pose of the new block
-     newboard, figLoc, bricksLastPiece = getNewBoard(f, b, p, blockLines, bricksLastPiece, altitudeLast, weights, nCnt)
+     newboard, figLoc = getNewBoard(f, b, p, weights, nCnt)
 
      # reset the panel
      for h in xrange(0,len(f)):
@@ -335,8 +337,6 @@ while games < numGames:
      rh = 0
      p  = []
      it = 0
-     altitudeLast = figLoc[1]
-     blockLines   = 0
 
      time.sleep(0)
 
@@ -349,7 +349,6 @@ while games < numGames:
       pd.flip() # update the contents of the entire display
    t+=1
    t2+=1
-   time.sleep(0.01) # velocity of the game
 
    # update the number of iterations
    it += 1
