@@ -17,7 +17,7 @@ pg  = pygame
 pd  = pg.display 
 cdc = copy.deepcopy
 
-display = 1
+display = 0
 
 #########
 # MAIN
@@ -239,7 +239,6 @@ while games < numGames:
 
    # game over
    if gv>=0:
-    print "Game: [%s, %s, %s] -> Lines: %s" % (games, nCnt, cntL, lines)
 
     if display:
       gs=z.render("GAME OVER",1,(255,255,255))
@@ -259,7 +258,7 @@ while games < numGames:
 
     # weight configuration tested
     if cntL == L:
-      print "Game: [%s] -> Lines: %s" % (games, float(accumLines) / L)
+      print "Game: [%s, %s] -> Lines: %s" % (games, nCnt, float(accumLines) / L)
 
       # update the performance vector and the counter
       nScore[nCnt] = float(accumLines) / L
