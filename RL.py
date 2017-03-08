@@ -165,14 +165,14 @@ def getNewBoard(board, curFig, figOrient, diffLines, bricksLastPiece, altitudeLa
 		rotations = 3
 
 	# create reward vector
-	stateValue    = [-float('Inf') for x in range(32)]
-	bricksRemoved = [-float('Inf') for x in range(32)]
+	stateValue    = [-float('Inf') for x in range(4*(width-2))]
+	bricksRemoved = [-float('Inf') for x in range(4*(width-2))]
 	rCnt       = 0
 
 	# create a matrix to store the translations used with each rotation
-	possibilities = np.full((4, 8), -1)
-	finalHeight   = np.full((4, 8), -1)
-	finalTrans    = np.full((4, 8), -1)
+	possibilities = np.full((4, width-2), -1)
+	finalHeight   = np.full((4, width-2), -1)
+	finalTrans    = np.full((4, width-2), -1)
 	cntTries      = 0
 
 	# rotate the figure

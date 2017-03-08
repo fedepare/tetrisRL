@@ -17,7 +17,7 @@ pg  = pygame
 pd  = pg.display 
 cdc = copy.deepcopy
 
-display = 0
+display = 1
 
 #########
 # MAIN
@@ -76,7 +76,7 @@ while games < numGames:
   cols  = [(0,0,0),(100,100,100),(10,100,225),(0,150,220),(0,220,150),(60,200,10),(180,210,5),(210,180,10),(100,200,170)]
 
   # f is the current state of the board
-  f=[[1]+[0 for x in range(8)]+[1] for x in range(19)]+[[1 for x in range(10)]]
+  f=[[1]+[0 for x in range(10)]+[1] for x in range(19)]+[[1 for x in range(12)]]
 
   # game stuff
   of  = cdc(f)
@@ -250,7 +250,6 @@ while games < numGames:
     if gv==99:
       if display:
         pd.flip()
-        time.sleep(4)
 
     # update cntL
     cntL += 1
@@ -349,7 +348,6 @@ while games < numGames:
       pd.flip() # update the contents of the entire display
    t+=1
    t2+=1
-   time.sleep(0.01) # velocity of the game
 
    # update the number of iterations
    it += 1
