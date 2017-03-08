@@ -76,7 +76,7 @@ while games < numGames:
   cols  = [(0,0,0),(100,100,100),(10,100,225),(0,150,220),(0,220,150),(60,200,10),(180,210,5),(210,180,10),(100,200,170)]
 
   # f is the current state of the board
-  f=[[1]+[0 for x in range(10)]+[1] for x in range(19)]+[[1 for x in range(12)]]
+  f=[[1]+[0 for x in range(8)]+[1] for x in range(19)]+[[1 for x in range(10)]]
 
   # game stuff
   of  = cdc(f)
@@ -166,6 +166,12 @@ while games < numGames:
       rx=1
      r+=1
     c+=1
+
+   # detect feature out of the board
+    for x in xrange(0,len(f[0])):
+      if f[19][x] != 1:
+        gv=10
+        rx=1
 
    # update the board with a fallen piece
    if rx and not nor:
