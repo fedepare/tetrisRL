@@ -58,7 +58,7 @@ for x in xrange(0,len(muVec)):
 sigVec  = np.zeros((numGames, nFeat))
 for x in xrange(0,len(sigVec)):
   for y in xrange(0,len(sigVec[0])):
-    sigVec[x][y] = 10
+    sigVec[x][y] = np.sqrt(25)
 
 # weight initialization
 weights = np.zeros((n, nFeat))
@@ -302,7 +302,7 @@ while games < numGames:
           accum = 0
           for y in xrange(1,len(idxBest)):
             accum += (weights[idxBest[y]][x] - muVec[games][x])**2
-          sigVec[games][x] = np.sqrt(accum / len(idxBest))
+          sigVec[games][x] = np.sqrt((accum / len(idxBest)))
 
         # obtain a new set of weights
         weights = np.zeros((n, nFeat))
