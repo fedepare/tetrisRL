@@ -28,7 +28,7 @@ featSet = 2
 #########
 
 # read the results from the file
-with open("/home/fedepare/tetrisRL/results/Bertsekas_NoNoise_CE_1.dat", "rb") as f:
+with open("/home/fedepare/tetrisRL/results/Bertsekas_DecNoise_CE_1.dat", "rb") as f:
     data = pickle.load(f)
 
 sigVec = data[1]

@@ -21,12 +21,12 @@ display  = 0
 
 # 1. Dellacherie features
 # 2. Bertsekas-Tsitsiklis features
-features = 1
+features = 2
 
 # 1. no noise
 # 2. constant noise
 # 3. lineary decreasing noise
-noise = 2
+noise = 1
 
 #########
 # MAIN
@@ -67,11 +67,11 @@ muVec   = np.zeros((numGames, nFeat))
 sigVec  = np.zeros((numGames, nFeat))
 for x in xrange(0,len(sigVec)):
   for y in xrange(0,len(sigVec[0])):
-    sigVec[x][y] = 10
+    sigVec[x][y] = 5
     if noise == 2:
-      sigVec[x][y] += 4
+      sigVec[x][y] += 2
     elif noise == 3:
-      sigVec[x][y] += max(5-games/10, 0)
+      sigVec[x][y] += max(3-games/10, 0)
 
 # weight initialization
 weights = np.zeros((n, nFeat))
@@ -323,9 +323,9 @@ while games < numGames:
             accum += (weights[idxBest[y]][x] - muVec[games][x])**2
           sigVec[games][x] = (np.sqrt(accum / len(idxBest))) + 4
           if noise == 2:
-            sigVec[games][x] += 4
+            sigVec[games][x] += 2
           elif noise == 3:
-            sigVec[x][y] += max(5-games/10, 0)
+            sigVec[games][x] += max(3-games/10, 0)
 
         # obtain a new set of weights
         weights = np.zeros((n, nFeat))
@@ -377,7 +377,7 @@ while games < numGames:
    # update the number of iterations
    it += 1
 
-with open("Bertsekas_CnstNoise_CE_1.dat", "wb") as f:
+with open("Bertsekas_NoNoise_CE_2.dat", "wb") as f:
     pickle.dump([muVec, sigVec], f)
 
 if display:
