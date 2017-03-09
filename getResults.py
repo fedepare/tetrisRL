@@ -24,7 +24,7 @@ display = 0
 #########
 
 # read the results from the file
-with open("pickle.dat", "rb") as f:
+with open("Bertsekas_NoNoise_CE_1.dat", "rb") as f:
     data = pickle.load(f)
 
 sigVec = data[1]
@@ -233,7 +233,6 @@ while games < numGames:
     if gv==99:
       if display:
         pd.flip()
-        time.sleep(4)
 
     # update cntL
     cntL += 1
@@ -289,7 +288,6 @@ while games < numGames:
       pd.flip() # update the contents of the entire display
    t+=1
    t2+=1
-   time.sleep(0.01) # velocity of the game
 
    # update the number of iterations
    it += 1
