@@ -19,12 +19,16 @@ cdc = copy.deepcopy
 
 display = 0
 
+# 1. Dellacherie features
+# 2. Bertsekas-Tsitsiklis features
+featSet = 2
+
 #########
 # MAIN
 #########
 
 # read the results from the file
-with open("Bertsekas_NoNoise_CE_1.dat", "rb") as f:
+with open("/home/fedepare/tetrisRL/results/Bertsekas_NoNoise_CE_1.dat", "rb") as f:
     data = pickle.load(f)
 
 sigVec = data[1]
@@ -49,7 +53,10 @@ L     = 30
 cntL  = 0
 
 # number of features used to represent the state of the board
-nFeat = 6
+if featSet == 1:
+  nFeat = 6
+elif featSet == 2:
+  nFeat = 21
 
 # weights
 weights = data[0]
@@ -259,7 +266,7 @@ while games < numGames:
    if it == 1 and not cr:
 
      # choose the pose of the new block
-     newboard, figLoc, bricksLastPiece = getNewBoard(f, b, p, blockLines, bricksLastPiece, altitudeLast, weights, games)
+     newboard, figLoc, bricksLastPiece = getNewBoard(f, b, p, blockLines, bricksLastPiece, altitudeLast, weights, games, featSet)
 
      # reset the panel
      for h in xrange(0,len(f)):

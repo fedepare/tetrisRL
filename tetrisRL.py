@@ -17,7 +17,16 @@ pg  = pygame
 pd  = pg.display 
 cdc = copy.deepcopy
 
-display = 0
+display  = 0
+
+# 1. Dellacherie features
+# 2. Bertsekas-Tsitsiklis features
+features = 1
+
+# 1. no noise
+# 2. constant noise
+# 3. lineary decreasing noise
+noise = 2
 
 #########
 # MAIN
@@ -48,14 +57,21 @@ L     = 5
 cntL  = 0
 
 # number of features used to represent the state of the board
-nFeat = 6
+if features == 1:
+  nFeat = 6
+elif features == 2:
+  nFeat = 21
 
 # initial normal distribution
 muVec   = np.zeros((numGames, nFeat))
 sigVec  = np.zeros((numGames, nFeat))
 for x in xrange(0,len(sigVec)):
   for y in xrange(0,len(sigVec[0])):
-    sigVec[x][y] = 10 + 4
+    sigVec[x][y] = 10
+    if noise == 2:
+      sigVec[x][y] += 4
+    elif noise == 3:
+      sigVec[x][y] += max(5-games/10, 0)
 
 # weight initialization
 weights = np.zeros((n, nFeat))
@@ -306,6 +322,10 @@ while games < numGames:
           for y in xrange(1,len(idxBest)):
             accum += (weights[idxBest[y]][x] - muVec[games][x])**2
           sigVec[games][x] = (np.sqrt(accum / len(idxBest))) + 4
+          if noise == 2:
+            sigVec[games][x] += 4
+          elif noise == 3:
+            sigVec[x][y] += max(5-games/10, 0)
 
         # obtain a new set of weights
         weights = np.zeros((n, nFeat))
@@ -324,7 +344,7 @@ while games < numGames:
    if it == 1 and not cr:
 
      # choose the pose of the new block
-     newboard, figLoc, bricksLastPiece = getNewBoard(f, b, p, blockLines, bricksLastPiece, altitudeLast, weights, nCnt)
+     newboard, figLoc, bricksLastPiece = getNewBoard(f, b, p, blockLines, bricksLastPiece, altitudeLast, weights, nCnt, features)
 
      # reset the panel
      for h in xrange(0,len(f)):
@@ -357,7 +377,7 @@ while games < numGames:
    # update the number of iterations
    it += 1
 
-with open("Dellacherie_CnstNoise_CE_1.dat", "wb") as f:
+with open("Bertsekas_CnstNoise_CE_1.dat", "wb") as f:
     pickle.dump([muVec, sigVec], f)
 
 if display:
