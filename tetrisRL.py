@@ -58,7 +58,7 @@ for x in xrange(0,len(muVec)):
 sigVec  = np.zeros((numGames, nFeat))
 for x in xrange(0,len(sigVec)):
   for y in xrange(0,len(sigVec[0])):
-    sigVec[x][y] = 5
+    sigVec[x][y] = 10
 
 # weight initialization
 weights = np.zeros((n, nFeat))
