@@ -17,7 +17,7 @@ pg  = pygame
 pd  = pg.display 
 cdc = copy.deepcopy
 
-display = 1
+display = 0
 
 #########
 # MAIN
@@ -47,7 +47,7 @@ L     = 5
 cntL  = 0
 
 # number of features used to represent the state of the board
-nFeat = 2
+nFeat = 21
 
 # initial normal distribution
 muVec   = np.zeros((numGames, nFeat))
@@ -79,7 +79,7 @@ while games < numGames:
   cols  = [(0,0,0),(100,100,100),(10,100,225),(0,150,220),(0,220,150),(60,200,10),(180,210,5),(210,180,10),(100,200,170)]
 
   # f is the current state of the board
-  f=[[1]+[0 for x in range(10)]+[1] for x in range(19)]+[[1 for x in range(12)]]
+  f=[[1]+[0 for x in range(8)]+[1] for x in range(19)]+[[1 for x in range(10)]]
 
   # game stuff
   of  = cdc(f)
@@ -297,7 +297,6 @@ while games < numGames:
           for y in xrange(1,len(idxBest)):
             accum += weights[idxBest[y]][x]
           muVec[games][x] = accum / len(idxBest)
-        print muVec
 
         for x in xrange(0,nFeat):
           accum = 0

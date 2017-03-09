@@ -43,19 +43,17 @@ def features(board, weights, nCnt):
 
 	# Bertsekas and Tsitsiklis features
 	cnt = 0
-	# featVec = [0 for x in range(len(contour) + len(diffHeight) + 2)]
+	featVec = [0 for x in range(len(contour) + len(diffHeight) + 2)]
 
-	# for x in xrange(0,len(featVec)):
-	# 	if cnt < len(contour):
-	# 		featVec[cnt] = contour[x]
-	# 	elif cnt >= len(contour) and cnt < len(contour) + len(diffHeight):
-	# 		featVec[cnt] = diffHeight[x - len(contour)]
-	# 	cnt += 1
+	for x in xrange(0,len(featVec)):
+		if cnt < len(contour):
+			featVec[cnt] = contour[x]
+		elif cnt >= len(contour) and cnt < len(contour) + len(diffHeight):
+			featVec[cnt] = diffHeight[x - len(contour)]
+		cnt += 1
 	
-	# featVec[-2] = max(contour)
-	# featVec[-1] = buriedHoles
-
-	featVec = [max(contour), buriedHoles]
+	featVec[-2] = max(contour)
+	featVec[-1] = buriedHoles
 
 	# value of the state
 	value = 0
