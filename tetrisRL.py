@@ -47,7 +47,7 @@ L     = 5
 cntL  = 0
 
 # number of features used to represent the state of the board
-nFeat = 21
+nFeat = 17
 
 # initial normal distribution
 muVec   = np.zeros((numGames, nFeat))
@@ -302,7 +302,7 @@ while games < numGames:
           accum = 0
           for y in xrange(1,len(idxBest)):
             accum += (weights[idxBest[y]][x] - muVec[games][x])**2
-          sigVec[games][x] = np.sqrt((accum / len(idxBest)))
+          sigVec[games][x] = np.sqrt(accum / len(idxBest))
 
         # obtain a new set of weights
         weights = np.zeros((n, nFeat))
@@ -352,7 +352,7 @@ while games < numGames:
    # update the number of iterations
    it += 1
 
-with open("pickle.dat", "wb") as f:
+with open("Bertsekas_NoNoise_CE_5.dat", "wb") as f:
     pickle.dump([muVec, sigVec], f)
 
 if display:
