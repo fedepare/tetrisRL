@@ -163,7 +163,7 @@ def features(board, prevLines, bricksLastPiece, altitudeLast, weights, nCnt, fea
 	# value of the state
 	value = 0
 	for x in xrange(0,len(featVec)):
-		value += featVec[x] * weights[nCnt][x]
+		value += featVec[x] * weights[-1][x]
 
 	return value, cntEroded
 
