@@ -28,7 +28,7 @@ featSet = 2
 #########
 
 # read the results from the file
-with open("/home/fedepare/tetrisRL/results/Bertsekas_DecNoise_CE_1.dat", "rb") as f:
+with open("/home/fedepare/tetrisRL/results/Bertsekas_CnstNoise_CE_5.dat", "rb") as f:
     data = pickle.load(f)
 
 sigVec = data[1]
@@ -299,7 +299,7 @@ while games < numGames:
    # update the number of iterations
    it += 1
 
-with open("results.dat", "wb") as f:
+with open("Bertsekas_CnstNoise_LEARNING_5.dat", "wb") as f:
     pickle.dump(performance, f)
 
 if display:

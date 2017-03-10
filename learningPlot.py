@@ -4,11 +4,11 @@ import matplotlib.pyplot as plt
 import matplotlib as mpl
 
 # read the results from the file
-with open("/home/fedepare/tetrisRL/results/Bertsekas_NoNoise_LEARNING_1.dat", "rb") as f:
+with open("/home/fedepare/tetrisRL/results/LEARNING/Bertsekas_NoNoise_LEARNING_1.dat", "rb") as f:
     BNoN1 = pickle.load(f)
-with open("/home/fedepare/tetrisRL/results/Bertsekas_CnstNoise_LEARNING_1.dat", "rb") as f:
+with open("/home/fedepare/tetrisRL/results/LEARNING/Bertsekas_CnstNoise_LEARNING_1.dat", "rb") as f:
     BCnstN1 = pickle.load(f)
-with open("/home/fedepare/tetrisRL/results/Bertsekas_DecNoise_LEARNING_1.dat", "rb") as f:
+with open("/home/fedepare/tetrisRL/results/LEARNING/Bertsekas_DecNoise_LEARNING_1.dat", "rb") as f:
     BDecN1 = pickle.load(f)
 
 # initialize figure
