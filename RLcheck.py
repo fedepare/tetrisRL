@@ -33,12 +33,14 @@ def features(board, prevLines, bricksLastPiece, altitudeLast, weights, nCnt, fea
 		pileHeight = max(contour)
 
 	    # 2. number of buried holes
+		holeDepth   = 0
 		buriedHoles = 0
 		for w in xrange(0,len(contour)):
 			hStart = height - 1 - contour[w]
 			for h in xrange(hStart,height-1):
 				if board[h][w+1] == 0:
 					buriedHoles += 1
+					holeDepth += contour[w]
 
 		# 3. removed lines
 		removedLines = prevLines
@@ -121,8 +123,17 @@ def features(board, prevLines, bricksLastPiece, altitudeLast, weights, nCnt, fea
 		# 12. eroded piece cells
 		erodedCells = removedLines * bricksLastPiece
 
+		# 13. rows with holes
+		rowHole = 0
+		hStart = height - 1 - max(contour)
+		for h in xrange(hStart,height-1):
+			for w in xrange(0,len(contour)):
+				if board[h][w+1] == 0 and board[h-1][w+1] != 0:
+					rowHole+=1
+					break
+
 		# Dellacherie features
-		featVec = [landingHeight, erodedCells, rowTrans, colTrans, buriedHoles, depthCnt]
+		featVec = [landingHeight, erodedCells, rowTrans, colTrans, buriedHoles, depthCnt, holeDepth, rowHole]
 
 	else:
 

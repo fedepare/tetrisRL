@@ -9,7 +9,7 @@ import sys
 import copy 
 import os
 from pygame.locals import *
-from RL import *
+from RLcheck import *
 import pickle
 import operator
 
@@ -21,7 +21,7 @@ display = 1
 
 # 1. Dellacherie features
 # 2. Bertsekas-Tsitsiklis features
-featSet = 2
+featSet = 1
 
 #########
 # MAIN
@@ -157,6 +157,12 @@ while games < numGames:
       rx=1
      r+=1
     c+=1
+
+   # detect feature out of the board
+   for x in xrange(0,len(f[0])):
+     if f[19][x] != 1:
+       gv=10
+       rx=1
 
    # update the board with a fallen piece
    if rx and not nor:

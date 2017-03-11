@@ -9,7 +9,7 @@ import sys
 import copy 
 import os
 from pygame.locals import *
-from RL import *
+from RLcheck import *
 import pickle
 import operator
 
@@ -21,12 +21,7 @@ display  = 0
 
 # 1. Dellacherie features
 # 2. Bertsekas-Tsitsiklis features
-features = 2
-
-# 1. no noise
-# 2. constant noise
-# 3. lineary decreasing noise
-noise = 1
+featSet = 2
 
 #########
 # MAIN
@@ -57,21 +52,21 @@ L     = 5
 cntL  = 0
 
 # number of features used to represent the state of the board
-if features == 1:
-  nFeat = 6
-elif features == 2:
-  nFeat = 21
+if featSet == 1:
+  nFeat = 8
+elif featSet == 2:
+  nFeat = 17
 
 # initial normal distribution
 muVec   = np.zeros((numGames, nFeat))
+for x in xrange(0,len(muVec)):
+  for y in xrange(0,len(muVec[0])):
+    muVec[x][y] = 0
+
 sigVec  = np.zeros((numGames, nFeat))
 for x in xrange(0,len(sigVec)):
   for y in xrange(0,len(sigVec[0])):
     sigVec[x][y] = 5
-    if noise == 2:
-      sigVec[x][y] += 2
-    elif noise == 3:
-      sigVec[x][y] += max(3-games/10, 0)
 
 # weight initialization
 weights = np.zeros((n, nFeat))
@@ -124,10 +119,6 @@ while games < numGames:
   _=0
 
   it  = 0 # number of iterations
-
-  # music
-  # pg.mixer.music.load("t.ogg")
-  # pg.mixer.music.play(-1)
 
   # the game
   while 1:
@@ -184,10 +175,10 @@ while games < numGames:
     c+=1
 
    # detect feature out of the board
-    for x in xrange(0,len(f[0])):
-      if f[19][x] != 1:
-        gv=10
-        rx=1
+   for x in xrange(0,len(f[0])):
+     if f[19][x] != 1:
+       gv=10
+       rx=1
 
    # update the board with a fallen piece
    if rx and not nor:
@@ -321,11 +312,7 @@ while games < numGames:
           accum = 0
           for y in xrange(1,len(idxBest)):
             accum += (weights[idxBest[y]][x] - muVec[games][x])**2
-          sigVec[games][x] = (np.sqrt(accum / len(idxBest))) + 4
-          if noise == 2:
-            sigVec[games][x] += 2
-          elif noise == 3:
-            sigVec[games][x] += max(3-games/10, 0)
+          sigVec[games][x] = np.sqrt(accum / len(idxBest))
 
         # obtain a new set of weights
         weights = np.zeros((n, nFeat))
@@ -344,7 +331,7 @@ while games < numGames:
    if it == 1 and not cr:
 
      # choose the pose of the new block
-     newboard, figLoc, bricksLastPiece = getNewBoard(f, b, p, blockLines, bricksLastPiece, altitudeLast, weights, nCnt, features)
+     newboard, figLoc, bricksLastPiece = getNewBoard(f, b, p, blockLines, bricksLastPiece, altitudeLast, weights, nCnt, featSet)
 
      # reset the panel
      for h in xrange(0,len(f)):
@@ -377,7 +364,7 @@ while games < numGames:
    # update the number of iterations
    it += 1
 
-with open("Bertsekas_NoNoise_CE_2.dat", "wb") as f:
+with open("Bertsekas_NoNoise_CE_4.dat", "wb") as f:
     pickle.dump([muVec, sigVec], f)
 
 if display:

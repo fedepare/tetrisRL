@@ -9,7 +9,7 @@ import sys
 import copy 
 import os
 from pygame.locals import *
-from RL import *
+from RLcheck import *
 import pickle
 import operator
 
@@ -28,7 +28,7 @@ featSet = 2
 #########
 
 # read the results from the file
-with open("/home/fedepare/tetrisRL/results/Bertsekas_CnstNoise_CE_5.dat", "rb") as f:
+with open("/home/fedepare/tetrisRL/results/test.dat", "rb") as f:
     data = pickle.load(f)
 
 sigVec = data[1]
@@ -157,6 +157,12 @@ while games < numGames:
       rx=1
      r+=1
     c+=1
+
+   # detect feature out of the board
+   for x in xrange(0,len(f[0])):
+     if f[19][x] != 1:
+       gv=10
+       rx=1
 
    # update the board with a fallen piece
    if rx and not nor:
@@ -299,7 +305,7 @@ while games < numGames:
    # update the number of iterations
    it += 1
 
-with open("Bertsekas_CnstNoise_LEARNING_5.dat", "wb") as f:
+with open("testlear.dat", "wb") as f:
     pickle.dump(performance, f)
 
 if display:
