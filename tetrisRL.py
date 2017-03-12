@@ -352,7 +352,7 @@ while games < numGames:
    # update the number of iterations
    it += 1
 
-with open("Bertsekas_NoNoise_CE_5.dat", "wb") as f:
+with open("Bertsekas_NoNoise_CE_4.dat", "wb") as f:
     pickle.dump([muVec, sigVec], f)
 
 if display:
