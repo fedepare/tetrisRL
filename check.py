@@ -21,7 +21,7 @@ display = 1
 
 # 1. Dellacherie features
 # 2. Bertsekas-Tsitsiklis features
-featSet = 1
+featSet = 2
 
 #########
 # MAIN
@@ -71,7 +71,7 @@ while games < numGames:
   cols  = [(0,0,0),(100,100,100),(10,100,225),(0,150,220),(0,220,150),(60,200,10),(180,210,5),(210,180,10),(100,200,170)]
 
   # f is the current state of the board
-  f=[[1]+[0 for x in range(8)]+[1] for x in range(19)]+[[1 for x in range(10)]]
+  f=[[1]+[0 for x in range(10)]+[1] for x in range(19)]+[[1 for x in range(12)]]
 
   # game stuff
   of  = cdc(f)
@@ -149,7 +149,7 @@ while games < numGames:
     for k in l:
      while c+lc[0]<1:
       lc[0]+=1
-     while c+lc[0]>8:
+     while c+lc[0]>11:
       lc[0]-=1
      if f[r+lc[1]][c+lc[0]] and k:
       if lc[1]==0:
@@ -190,7 +190,7 @@ while games < numGames:
       wr=r
       cr+=[[f.index(wr),10]]
       f.remove(wr)
-      f=[[1]+[0 for x in range(8)]+[1]]+f
+      f=[[1]+[0 for x in range(10)]+[1]]+f
       if gv==-1:
        _+=10;
        bt=max(8,bt-1)
@@ -294,7 +294,7 @@ while games < numGames:
      if display:
       pd.flip() # update the contents of the entire display
 
-     time.sleep(0)
+     time.sleep(20)
 
    ######################################################################################
    ######################################################################################

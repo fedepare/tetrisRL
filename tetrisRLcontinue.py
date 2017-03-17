@@ -1,4 +1,4 @@
-########
+#########
 # IMPORTS
 #########
 
@@ -17,7 +17,7 @@ pg  = pygame
 pd  = pg.display 
 cdc = copy.deepcopy
 
-display = 0
+display  = 0
 
 # 1. Dellacherie features
 # 2. Bertsekas-Tsitsiklis features
@@ -27,22 +27,6 @@ featSet = 1
 # MAIN
 #########
 
-# read the results from the file
-with open("/home/fedepare/tetrisRL/biggerBoard_CnstNoise.dat", "rb") as f:
-    data = pickle.load(f)
-
-sigVec = data[1]
-weightsOld = data[0]
-
-with open("/home/fedepare/tetrisRL/biggerBoard_CnstNoise_continue.dat", "rb") as f:
-    data2 = pickle.load(f)
-
-sigVec2 = data2[1]
-weightsOld2 = data2[0]
-
-sigVec     = np.vstack((sigVec, sigVec2))
-weightsOld = np.vstack((weightsOld, weightsOld2))
-
 # game initialization
 if display:
   pg.init()
@@ -51,15 +35,20 @@ if display:
 
 # number of games to be played
 games    = 0
-numGames = 80 + 1
+numGames = 40
 
 # variable initialization
 blockLines  = 0
 accumLines  = 0
 performance = [0 for x in xrange(0, numGames)]
 
+# initial normal distribution
+n    = 100
+nCnt = 0
+rho  = 0.1
+
 # tries for each weight vector
-L     = 30
+L     = 5
 cntL  = 0
 
 # number of features used to represent the state of the board
@@ -68,13 +57,34 @@ if featSet == 1:
 elif featSet == 2:
   nFeat = 21
 
-weights = np.zeros((len(weightsOld)+1, len(weightsOld[0])))
-for x in xrange(0,len(weightsOld)+1):
-  for y in xrange(0,len(weightsOld[0])):
-    if x == 0:
-      weights[x][y] = 0
-    else:
-      weights[x][y] = weightsOld[x-1][y]
+# read the results from the file
+with open("/home/fedepare/tetrisRL/biggerBoard.dat", "rb") as f:
+    data = pickle.load(f)
+
+prevWeights = data[0]
+prevSigma   = data[1]
+lastWeights = prevWeights[-1][:]
+lastSigma   = prevSigma[-1][:]
+
+# initial normal distribution
+muVec   = np.zeros((numGames, nFeat))
+for x in xrange(0,len(muVec)):
+  for y in xrange(0,len(muVec[0])):
+    muVec[x][y] = lastWeights[y]
+
+sigVec  = np.zeros((numGames, nFeat))
+for x in xrange(0,len(sigVec)):
+  for y in xrange(0,len(sigVec[0])):
+    sigVec[x][y] = lastSigma[y]
+
+# weight initialization
+weights = np.zeros((n, nFeat))
+for x in xrange(0,n):
+  for y in xrange(0,nFeat):
+    weights[x][y] = np.random.normal(muVec[games][y], sigVec[games][y], 1)
+
+# vector use to select the best weight configurations
+nScore = [0.0 for x in xrange(0, n)]
 
 while games < numGames:
 
@@ -244,13 +254,13 @@ while games < numGames:
      aux = cr[0]
      if aux[1] == 5:
       lines += 1
+      blockLines += 1
 
    ######################################################################################
    ######################################################################################
 
    # game over
    if gv>=0:
-    print "Game: [%s, %s] -> Lines: %s" % (games, cntL, lines)
 
     if display:
       gs=z.render("GAME OVER",1,(255,255,255))
@@ -270,24 +280,68 @@ while games < numGames:
 
     # weight configuration tested
     if cntL == L:
-      print "Game: [%s] -> Lines: %s" % (games, float(accumLines) / L)
+      print "Game: [%s, %s] -> Lines: %s" % (games, nCnt, float(accumLines) / L)
 
-      # performance score
-      performance[games] = float(accumLines) / L
+      # update the performance vector and the counter
+      nScore[nCnt] = float(accumLines) / L
+      nCnt += 1
 
       # reset counters
       cntL       = 0
       accumLines = 0
 
-      # update counters
-      games += 1
+      # all weight configurations tested
+      if nCnt == n:
+
+        # update counters
+        nCnt   = 0
+
+        # select the best configurations
+        idxBest = [0 for x in xrange(0,int(rho*n))]
+        accum   = 0
+        for x in xrange(0,int(rho*n)):
+          index, value = max(enumerate(nScore), key=operator.itemgetter(1))
+          accum += value
+          idxBest[x] = index
+          nScore[index] = -1
+
+        # get the average number of lines for the best configurations
+        performance[games] = float(accum) / (rho*n)
+        print "Performance:"
+        print performance
+
+        # update average and standard deviation
+        for x in xrange(0,nFeat):
+          accum = 0
+          for y in xrange(1,len(idxBest)):
+            accum += weights[idxBest[y]][x]
+          muVec[games][x] = accum / len(idxBest)
+
+        for x in xrange(0,nFeat):
+          accum = 0
+          for y in xrange(1,len(idxBest)):
+            accum += (weights[idxBest[y]][x] - muVec[games][x])**2
+          sigVec[games][x] = np.sqrt(accum / len(idxBest))
+          #sigVec[games][x] = np.sqrt(accum / len(idxBest) + 4)
+
+        # obtain a new set of weights
+        weights = np.zeros((n, nFeat))
+        for x in xrange(0,n):
+          for y in xrange(0,nFeat):
+            weights[x][y] = np.random.normal(muVec[games][y], sigVec[games][y], 1)
+
+        # reset the score matrix
+        nScore = [0.0 for x in xrange(0, n)]
+
+        # update counters
+        games += 1
 
     break
     
    if it == 1 and not cr:
 
      # choose the pose of the new block
-     newboard, figLoc, bricksLastPiece = getNewBoard(f, b, p, blockLines, bricksLastPiece, altitudeLast, weights, games, featSet)
+     newboard, figLoc, bricksLastPiece = getNewBoard(f, b, p, blockLines, bricksLastPiece, altitudeLast, weights, nCnt, featSet)
 
      # reset the panel
      for h in xrange(0,len(f)):
@@ -320,8 +374,8 @@ while games < numGames:
    # update the number of iterations
    it += 1
 
-with open("biggerBoard_CnstNoise_LEARNING_COMPLETE.dat", "wb") as f:
-    pickle.dump(performance, f)
+with open("biggerBoard_continue.dat", "wb") as f:
+    pickle.dump([muVec, sigVec, performance], f)
 
 if display:
   sys.exit(0)
