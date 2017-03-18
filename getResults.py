@@ -23,25 +23,21 @@ display = 0
 # 2. Bertsekas-Tsitsiklis features
 featSet = 1
 
+# 0. 10x20
+# 1. 8x20
+# 2. 6x20
+smallerBoard = 0
+
 #########
 # MAIN
 #########
 
 # read the results from the file
-with open("/home/fedepare/tetrisRL/biggerBoard_CnstNoise.dat", "rb") as f:
+with open("/home/fedepare/tetrisRL/results/NoNoise_8.dat", "rb") as f:
     data = pickle.load(f)
 
 sigVec = data[1]
 weightsOld = data[0]
-
-with open("/home/fedepare/tetrisRL/biggerBoard_CnstNoise_continue.dat", "rb") as f:
-    data2 = pickle.load(f)
-
-sigVec2 = data2[1]
-weightsOld2 = data2[0]
-
-sigVec     = np.vstack((sigVec, sigVec2))
-weightsOld = np.vstack((weightsOld, weightsOld2))
 
 # game initialization
 if display:
@@ -51,7 +47,7 @@ if display:
 
 # number of games to be played
 games    = 0
-numGames = 80 + 1
+numGames = 41
 
 # variable initialization
 blockLines  = 0
@@ -86,7 +82,12 @@ while games < numGames:
   cols  = [(0,0,0),(100,100,100),(10,100,225),(0,150,220),(0,220,150),(60,200,10),(180,210,5),(210,180,10),(100,200,170)]
 
   # f is the current state of the board
-  f=[[1]+[0 for x in range(10)]+[1] for x in range(19)]+[[1 for x in range(12)]]
+  if smallerBoard == 1:
+    f=[[1]+[0 for x in range(8)]+[1] for x in range(19)]+[[1 for x in range(10)]]
+  elif smallerBoard == 2:
+    f=[[1]+[0 for x in range(6)]+[1] for x in range(19)]+[[1 for x in range(8)]]
+  else:
+    f=[[1]+[0 for x in range(10)]+[1] for x in range(19)]+[[1 for x in range(12)]]
 
   # game stuff
   of  = cdc(f)
@@ -159,19 +160,48 @@ while games < numGames:
    c=0
 
    # collision detection
-   for l in p:
-    r=0
-    for k in l:
-     while c+lc[0]<1:
-      lc[0]+=1
-     while c+lc[0]>11:
-      lc[0]-=1
-     if f[r+lc[1]][c+lc[0]] and k:
-      if lc[1]==0:
-        gv=10
-      rx=1
-     r+=1
-    c+=1
+   if smallerBoard == 1:
+     for l in p:
+      r=0
+      for k in l:
+       while c+lc[0]<1:
+        lc[0]+=1
+       while c+lc[0]>9:
+        lc[0]-=1
+       if f[r+lc[1]][c+lc[0]] and k:
+        if lc[1]==0:
+          gv=10
+        rx=1
+       r+=1
+      c+=1
+   elif smallerBoard == 2:
+     for l in p:
+      r=0
+      for k in l:
+       while c+lc[0]<1:
+        lc[0]+=1
+       while c+lc[0]>7:
+        lc[0]-=1
+       if f[r+lc[1]][c+lc[0]] and k:
+        if lc[1]==0:
+          gv=10
+        rx=1
+       r+=1
+      c+=1
+   else:
+    for l in p:
+      r=0
+      for k in l:
+       while c+lc[0]<1:
+        lc[0]+=1
+       while c+lc[0]>11:
+        lc[0]-=1
+       if f[r+lc[1]][c+lc[0]] and k:
+        if lc[1]==0:
+          gv=10
+        rx=1
+       r+=1
+      c+=1
 
    # detect feature out of the board
    for x in xrange(0,len(f[0])):
@@ -205,7 +235,12 @@ while games < numGames:
       wr=r
       cr+=[[f.index(wr),10]]
       f.remove(wr)
-      f=[[1]+[0 for x in range(10)]+[1]]+f
+      if smallerBoard == 1:
+        f=[[1]+[0 for x in range(8)]+[1]]+f
+      elif smallerBoard == 2:
+        f=[[1]+[0 for x in range(6)]+[1]]+f
+      else:
+        f=[[1]+[0 for x in range(10)]+[1]]+f
       if gv==-1:
        _+=10;
        bt=max(8,bt-1)
@@ -320,7 +355,7 @@ while games < numGames:
    # update the number of iterations
    it += 1
 
-with open("biggerBoard_CnstNoise_LEARNING_COMPLETE.dat", "wb") as f:
+with open("NoNoise_8_10_LEARNING.dat", "wb") as f:
     pickle.dump(performance, f)
 
 if display:
