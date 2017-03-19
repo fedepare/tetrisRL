@@ -411,7 +411,84 @@ ax.grid(grid)
 ############################################################################################
 # SENSITIVITY ANALYSIS - FEATURES
 
-with open("/home/fedepare/tetrisRL/results/NoNoise_8_LEARNING.dat", "rb") as f:
-    performanceEight = pickle.load(f)
+# STANDARD DEVIATION
+
+# read the results from the file
+with open("/home/fedepare/tetrisRL/results/BT.dat", "rb") as f:
+    BNoN1 = pickle.load(f)
+    sigma = np.asarray(BNoN1[1])
+
+# initialize figure
+mpl.rcParams['legend.fontsize'] = 10
+fig = plt.figure(15)
+ax = fig.gca()
+ax.set_xlabel('Iterations', fontsize=15)
+ax.set_ylabel('Std Deviation', fontsize=15)
+ax.set_ylim([0,12])
+
+fede = [x for x in xrange(0,81)]
+ax.set_color_cycle([cm(1.*i/NUM_COLORS) for i in range(NUM_COLORS)])
+
+for y in xrange(0,len(sigma[0])):
+	vector = [10 for z in xrange(0,81)]
+	for x in xrange(1,len(sigma)+1):
+		vector[x] = sigma[x-1][y]
+	ax.plot(fede, vector, linewidth=2, label="w" + str(y+1))
+
+ax.legend(loc=1)
+ax.grid(grid)
+
+# WEIGHTS
+
+# read the results from the file
+with open("/home/fedepare/tetrisRL/results/BT.dat", "rb") as f:
+    BNoN1 = pickle.load(f)
+    weights = np.asarray(BNoN1[0])
+
+# initialize figure
+mpl.rcParams['legend.fontsize'] = 10
+fig = plt.figure(16)
+ax = fig.gca()
+ax.set_xlabel('iterations', fontsize=15)
+ax.set_ylabel('Weights', fontsize=15)
+ax.set_ylim([-25,2])
+ax.set_color_cycle([cm(1.*i/NUM_COLORS) for i in range(NUM_COLORS)])
+
+fede = [x for x in xrange(0,81)]
+for y in xrange(0,len(weights[0])):
+	vector = [0 for z in xrange(0,81)]
+	for x in xrange(1,len(weights)+1):
+		vector[x] = weights[x-1][y]
+	ax.plot(fede, vector, linewidth=2, label="w" + str(y+1))
+
+ax.legend(loc=4)
+ax.grid(grid)
+
+# LEARNING
+
+# read the results from the file
+with open("/home/fedepare/tetrisRL/results/biggerBoard_LEARNING_COMPLETE.dat", "rb") as f:
+    BNoN1 = pickle.load(f)
+
+with open("/home/fedepare/tetrisRL/results/BT_LEARNING.dat", "rb") as f:
+    resultsDecNoise = pickle.load(f)
+
+# initialize figure
+mpl.rcParams['legend.fontsize'] = 10
+fig = plt.figure(17)
+ax = fig.gca()
+ax.set_xlabel('Iterations', fontsize=15)
+ax.set_ylabel('Cleared lines', fontsize=15)
+
+fede = [x for x in xrange(0,81)]
+ax.plot(fede, BNoN1, linewidth=2, label="Dellacherie",linestyle="-")
+ax.plot(fede, resultsDecNoise, linewidth=2, label="Bersekas-Tsitsiklkis",linestyle="-")
+
+ax.set_yscale('log')
+ax.set_ylim([10**0,10**3])
+ax.legend(loc=4)
+ax.grid(grid)
+ax.set_color_cycle([cm(1.*i/NUM_COLORS) for i in range(NUM_COLORS)])
+
 
 plt.show()

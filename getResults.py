@@ -21,7 +21,7 @@ display = 0
 
 # 1. Dellacherie features
 # 2. Bertsekas-Tsitsiklis features
-featSet = 1
+featSet = 2
 
 # 0. 10x20
 # 1. 8x20
@@ -33,7 +33,7 @@ smallerBoard = 0
 #########
 
 # read the results from the file
-with open("/home/fedepare/tetrisRL/results/NoNoise_8.dat", "rb") as f:
+with open("/home/fedepare/tetrisRL/results/BT.dat", "rb") as f:
     data = pickle.load(f)
 
 sigVec = data[1]
@@ -47,7 +47,7 @@ if display:
 
 # number of games to be played
 games    = 0
-numGames = 41
+numGames = 81
 
 # variable initialization
 blockLines  = 0
@@ -355,7 +355,7 @@ while games < numGames:
    # update the number of iterations
    it += 1
 
-with open("NoNoise_8_10_LEARNING.dat", "wb") as f:
+with open("BT_LEARNING.dat", "wb") as f:
     pickle.dump(performance, f)
 
 if display:

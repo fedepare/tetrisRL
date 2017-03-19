@@ -67,7 +67,7 @@ elif featSet == 2:
 muVec   = np.zeros((numGames, nFeat))
 for x in xrange(0,len(muVec)):
   for y in xrange(0,len(muVec[0])):
-    muVec[x][y] = 0
+    muVec[x][y] = -10
 
 sigVec  = np.zeros((numGames, nFeat))
 for x in xrange(0,len(sigVec)):
@@ -135,7 +135,7 @@ while games < numGames:
   while 1:
 
    if display:
-     sk.fill((0,0,0));
+     sk.fill((0,0,0))
      _su=z.render("Score " + str(_),1,(255,255,255))
      _rect=_su.get_rect()
      _rect.bottomright=(310,230)
