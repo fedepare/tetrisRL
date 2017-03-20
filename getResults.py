@@ -355,7 +355,7 @@ while games < numGames:
    # update the number of iterations
    it += 1
 
-with open("BT_LEARNING.dat", "wb") as f:
+with open("test_LEARNING.dat", "wb") as f:
     pickle.dump(performance, f)
 
 if display:

@@ -325,6 +325,7 @@ ax.plot(fede, resultsDecNoise, linewidth=1, label="Dec Noise",linestyle="--")
 ax.plot(fede, resultsCnstNoise, linewidth=1, label="Cnst Noise",linestyle="--")
 
 #ax.set_yscale('log')
+ax.set_yscale('log')
 ax.set_ylim([10**0,600])
 ax.legend(loc=4)
 ax.grid(grid)

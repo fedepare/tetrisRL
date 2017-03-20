@@ -18,11 +18,11 @@ pd  = pg.display
 cdc = copy.deepcopy
 
 # display tetris
-display  = 0
+display  = 1
 
 # 1. Dellacherie features
 # 2. Bertsekas-Tsitsiklis features
-featSet = 2
+featSet = 1
 
 # 0. 10x20
 # 1. 8x20
@@ -411,7 +411,7 @@ while games < numGames:
    # update the number of iterations
    it += 1
 
-with open("BT.dat", "wb") as f:
+with open("test.dat", "wb") as f:
     pickle.dump([muVec, sigVec, performance], f)
 
 if display:
